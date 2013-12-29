@@ -1,0 +1,128 @@
+<!DOCTYPE ppinstrument>
+
+<pp-instrument
+    name="JACK test">
+  <version/>
+  <startpage/>
+
+  <mode name="Mode">
+    <patch-format-ref name="program"/>
+    <banks>
+      <bank name="A" id="0" patches="0(1):15(16)"/>
+    </banks>
+  </mode>
+
+  <list name="mod-sources">
+    <value value="0" label="Const"/>
+    <value value="1" label="Key"/>
+    <value value="2" label="PB"/>
+    <value value="3" label="LFO1"/>
+    <value value="4" label="LFO2"/>
+    <value value="5" label="EG1"/>
+    <value value="6" label="Velocity"/>
+    <value value="7" label="Modwheel"/>
+  </list>
+
+  <list name="mod-dests">
+    <value value="0"  label="Off"/>
+    <value value="1"  label="O1 Freq"/>
+    <value value="2"  label="O1 PW"/>
+    <value value="3"  label="O1 Level"/>
+    <value value="4"  label="O1 Pan"/>
+    <value value="5"  label="O2 Freq"/>
+    <value value="6"  label="O2 PW"/>
+    <value value="7"  label="O2 Level"/>
+    <value value="8"  label="O2 Pan"/>
+    <value value="9"  label="O3 Freq"/>
+    <value value="10" label="O3 PW"/>
+    <value value="11" label="O3 Level"/>
+    <value value="12" label="O3 Pan"/>
+    <value value="13" label="F1 Co"/>
+    <value value="14" label="F1 Pan"/>
+    <value value="15" label="F2 Co"/>
+    <value value="16" label="F2 Pan"/>
+    <value value="17" label="Volume"/>
+  </list>
+
+  <list name="osc-types">
+    <value value="0" label="Off"/>
+    <value value="1" label="Sine"/>
+    <value value="2" label="Square"/>
+    <value value="3" label="Saw"/>
+    <value value="4" label="Wavetable"/>
+    <value value="5" label="Sample"/>
+    <value value="6" label="Input"/>
+  </list>
+
+  <patch-format name="program">
+    <g id="page" label="Patch">
+      <g label="Oscillator">
+	<p b="0"   n="0x0600" label="OSC1 Type" type="list:osc-types"/>
+	<p b="0:1" n="0x0200" label="OSC1 PW" range="0(0%):127(100%)"/>
+	<p b="0:1" n="0x0500" label="OSC1 Level" range="0(0%):127(100%)"/>
+	<p b="0"   n="0x0601" label="OSC2 Type" type="list:osc-types"/>
+	<p b="2:3" n="0x0201" label="OSC2 PW" range="0(0%):127(100%)"/>
+	<p b="2:3" n="0x0501" label="OSC2 Level" range="0(0%):127(100%)"/>
+	<p b="0"   n="0x0602" label="OSC3 Type" type="list:osc-types"/>
+	<p b="4:5" n="0x0202" label="OSC3 PW" range="0(0%):127(100%)"/>
+	<p b="4:5" n="0x0502" label="OSC3 Level" range="0(0%):127(100%)"/>
+      </g>
+      <g label="Filter">
+	<p b="0:1" n="0x0000" label="F1 co Hz" range="0:8000"/>
+	<p b="2:3" n="0x0001" label="F2 co Hz" range="0:8000"/>
+	<p b="0:1" n="0x0300" label="F1 Dist" range="0(0%):127(100%)"/>
+	<p b="2:3" n="0x0301" label="F2 Dist" range="0(0%):127(100%)"/>
+      </g>
+      <g label="LFO">
+	<p b="0:1" n="0x0100" label="LFO1 Hz" range="0(0):0x1fff(64)"/>
+	<p b="2:3" n="0x0101" label="LFO2 Hz" range="0(0):0x1fff(64)"/>
+      </g>
+      <g label="Amplifier EG">
+	<p b="0:1" n="0x0400" label="Attack [ms]" range="0:8000"/>
+	<p b="0:1" n="0x0401" label="Decay [ms]" range="0:8000"/>
+	<p b="0:1" n="0x0402" label="Sustain" range="0(0%):127(100%)"/>
+	<p b="0:1" n="0x0403" label="Release [ms]" range="0:8000"/>
+      </g>
+      <g label="Filter EG">
+	<p b="0:1" n="0x0410" label="Attack [ms]" range="0:8000"/>
+	<p b="0:1" n="0x0411" label="Decay [ms]" range="0:8000"/>
+	<p b="0:1" n="0x0412" label="Sustain" range="0(0%):127(100%)"/>
+	<p b="0:1" n="0x0413" label="Release [ms]" range="0:8000"/>
+      </g>
+      <g label="Modulations">
+	<g b="0x2000" label="Modulation 0" data-struct="modulation"/>
+	<g b="0x2100" label="Modulation 1" data-struct="modulation"/>
+	<g b="0x2200" label="Modulation 2" data-struct="modulation"/>
+	<g b="0x2300" label="Modulation 3" data-struct="modulation"/>
+	<g b="0x2400" label="Modulation 4" data-struct="modulation"/>
+      </g>
+      <g label="Modulations">
+	<g b="0x2500" label="Modulation 5" data-struct="modulation"/>
+	<g b="0x2600" label="Modulation 6" data-struct="modulation"/>
+	<g b="0x2700" label="Modulation 7" data-struct="modulation"/>
+	<g b="0x2800" label="Modulation 8" data-struct="modulation"/>
+	<g b="0x2900" label="Modulation 9" data-struct="modulation"/>
+      </g>
+      <g label="Modulations">
+	<g b="0x2a00" label="Modulation A" data-struct="modulation"/>
+	<g b="0x2b00" label="Modulation B" data-struct="modulation"/>
+	<g b="0x2c00" label="Modulation C" data-struct="modulation"/>
+	<g b="0x2d00" label="Modulation D" data-struct="modulation"/>
+	<g b="0x2e00" label="Modulation E" data-struct="modulation"/>
+      </g>
+      <g label="Modulations">
+	<g b="0x2f00" label="Modulation F" data-struct="modulation"/>
+	<g b="0x3000" label="Modulation G" data-struct="modulation"/>
+	<g b="0x3100" label="Modulation H" data-struct="modulation"/>
+	<g b="0x3200" label="Modulation I" data-struct="modulation"/>
+	<g b="0x3300" label="Modulation J" data-struct="modulation"/>
+      </g>
+    </g>
+  </patch-format>
+
+  <patch-format name="modulation">
+    <p b="0" label="Source" type="list:mod-sources"/>
+    <p b="1" label="Destination" type="list:mod-dests"/>
+    <p b="2[6-0]:3[6-0]" label="Amt [semis]" range="-8000(-160):8000(160)"/>
+  </patch-format>
+</pp-instrument>
