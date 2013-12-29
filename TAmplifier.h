@@ -16,7 +16,7 @@ public:
   {
     std::transform(in.begin(), in.end(),
 		   out.begin(),
-		   [Volume](TSample s) -> TSample {
+		   [this](TSample s) -> TSample {
 		     return Volume * s;
 		   });
   }
