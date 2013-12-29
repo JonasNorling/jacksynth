@@ -1,0 +1,9 @@
+.svn
+build
+deps.mk
+jacksynth
+minBLEP/data.txt
+minBLEP/*.o
+minBLEP/minblep
+minblep.h
+testdata.bin
