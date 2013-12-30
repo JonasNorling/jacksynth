@@ -1,3 +1,6 @@
+# Requires extra packages:
+# apt-get install octave-signal
+
 fid=fopen("testdata.bin", "r");
 x=fread(fid, Inf, "float");
 Fs=44100;
