@@ -16,7 +16,7 @@ xlabel("time [s]");
 plot(t, x);
 
 figure(3);
-fftstart=400/1000*Fs;
+fftstart=2500/1000*Fs; # Spectrum from 2.5s
 fftlen=4096;
 xlabel("Frequency [Hz]");
 freqs=0:Fs/fftlen:Fs-1;

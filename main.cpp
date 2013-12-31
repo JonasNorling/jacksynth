@@ -69,8 +69,8 @@ void testSignal()
   TGlobal::NyquistFrequency = TGlobal::SampleRate / 2;
   TJackSynth synth(inputPorts, outputPorts);
 
-  synth.Process(int(0.3*44100) & ~0x7);
   /*
+  synth.Process(int(0.3*44100) & ~0x7);
   synth.HandleMidi({0x90, 70, 0x40}); // note 70, A# 466Hz
   synth.Process(int(0.3*44100) & ~0x7);
 
@@ -86,6 +86,10 @@ void testSignal()
   synth.Process(int(1.0*44100) & ~0x7);
   */
 
+  synth.HandleMidi({0x90, 0, 0x40}); // note 0: 8.18 Hz
+  synth.Process(int(0.5*44100) & ~0x7);
+  synth.HandleMidi({0x80, 0, 0x40}); // release note
+
   // Sweep
   synth.HandleMidi({0x90, 33, 0x40}); // note 33: A 55Hz
   synth.Process(int(0.2*44100) & ~0x7);
@@ -93,7 +97,8 @@ void testSignal()
     synth.SetPitchBend(octave * 6);
     synth.Process(16);
   }
-  synth.HandleMidi({0x80, 33, 0x40});
+  synth.Process(int(0.1*44100) & ~0x7);
+  synth.HandleMidi({0x80, 33, 0x40}); // release note
   synth.Process(int(0.8*44100) & ~0x7);
 }
 

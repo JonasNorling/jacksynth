@@ -30,6 +30,7 @@ OBJS = $(SRCS:%.cpp=build/%.o)
 clean:
 	rm -f $(EXE) $(OBJS) deps.mk
 	rm -rf build
+	rm minblep.h
 
 $(EXE): $(OBJS)
 	@echo --\> $@
@@ -46,7 +47,7 @@ deps.mk: $(SRCS) $(TEST_SRCS)
 	@touch deps.mk
 
 	@for s in $^; do \
-		OBJ=`echo $$s | sed s/\.cpp/\.o/`; \
+		OBJ=build/`echo $$s | sed s/\.cpp/\.o/`; \
 		gcc -MT "$$OBJ" -MM $$s $(CCFLAGS) >> $@; \
 	done
 
@@ -62,10 +63,10 @@ minBLEP/minblep: minBLEP/minblep.o minBLEP/main.o
 	$(CXX) -o $@ $^
 
 showbleps: minBLEP/minblep
-	minBLEP/minblep --zerocrossings 48 --oversampling 32 > minBLEP/data.txt
+	minBLEP/minblep --zerocrossings 16 --oversampling 32 --type minblep > minBLEP/data.txt
 	octave --persist minBLEP/illustration.m
 
 minblep.h: minBLEP/minblep #Makefile
-	minBLEP/minblep --zerocrossings 16 --oversampling 64 --header > $@
+	minBLEP/minblep --zerocrossings 16 --oversampling 64 --header --type minblep > $@
 
 .PHONY: testspec showbleps
