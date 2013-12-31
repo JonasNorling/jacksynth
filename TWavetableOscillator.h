@@ -35,12 +35,4 @@ private:
 
   static const std::vector<TSample> SineTable;
   static const std::vector<TSample> SquareTable;
-
-  TSample linterpolate(const TSample* table, int tablelen, double pos)
-  {
-    const TSample& s0 = table[int(pos)];
-    const TSample& s1 = table[(int(pos)+1) % tablelen];
-    double frac = pos - int(pos);
-    return s0*(1-frac) + s1*frac;
-  }
 };

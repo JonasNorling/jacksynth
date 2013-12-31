@@ -33,10 +33,9 @@ void TMinBlepSawOscillator::Process(TSampleBuffer& in, TSampleBuffer& out)
     assert(Scanpos <= 1);
 
     if (lastpos > Scanpos) { // Wrapped around to beginning of wave
-      // Bleps don't seem to have to overlap for reasonable frequencies.
       const int offset = Scanpos/pace * minblep::overSampling;
       for (int i=0; i<BufferLen; i++) {
-	Buffer[(BufferPos+i) % BufferLen] = minblep::table[i*minblep::overSampling+offset];
+	Buffer[(BufferPos+i) % BufferLen] += -1 + minblep::table[i*minblep::overSampling+offset];
       }
     }
 
