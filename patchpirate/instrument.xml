@@ -62,9 +62,11 @@
 	<p b="0:1" n="0x0500" label="OSC1 Level" range="0(0%):127(100%)"/>
 	<p b="0"   n="0x0601" label="OSC2 Type" type="list:osc-types"/>
 	<p b="2:3" n="0x0201" label="OSC2 PW" range="0(0%):127(100%)"/>
+	<p b="2:3" n="0x0901" label="OSC2 Sync" range="0(off):1(on)"/>
 	<p b="2:3" n="0x0501" label="OSC2 Level" range="0(0%):127(100%)"/>
 	<p b="0"   n="0x0602" label="OSC3 Type" type="list:osc-types"/>
 	<p b="4:5" n="0x0202" label="OSC3 PW" range="0(0%):127(100%)"/>
+	<p b="4:5" n="0x0902" label="OSC3 Sync" range="0(off):1(on)"/>
 	<p b="4:5" n="0x0502" label="OSC3 Level" range="0(0%):127(100%)"/>
       </g>
       <g label="Filter">

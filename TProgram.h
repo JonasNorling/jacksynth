@@ -55,6 +55,7 @@ enum TParameter {
   PARAM_OSC_TYPE = 0x06,
   PARAM_OSC_DETUNE = 0x07,
   PARAM_OSC_OCTAVE = 0x08,
+  PARAM_OSC_SYNC = 0x09,
   PARAM_MODULATION0 = 0x20
 };
 
@@ -135,6 +136,7 @@ private:
   TFrequency FilterCutoff[TGlobal::Filters];
   TFrequency LfoFrequency[TGlobal::Lfos];
   TOscType OscType[TGlobal::Oscillators];
+  bool OscSync[TGlobal::Oscillators];
   TFraction OscPw[TGlobal::Oscillators];
   TFraction OscLevel[TGlobal::Oscillators];
   TFraction WaveShaper[TGlobal::Filters];

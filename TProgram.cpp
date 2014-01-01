@@ -67,11 +67,15 @@ void TProgram::Patch0()
   OscPw[1] = 0;
   OscPw[2] = 0;
 
+  OscSync[0] = false;
+  OscSync[1] = false;
+  OscSync[2] = false;
+  
   OscLevel[0] = 0.0;
   OscLevel[1] = 1.0;
   OscLevel[2] = 0.0;
 
-  Modulations[C_OSC1_DETUNE].Amount = semitones(1);
+  Modulations[C_OSC1_DETUNE].Amount = -cents(50);
 
   WaveShaper[0] = 0.0;
   WaveShaper[1] = 0.0;
@@ -110,6 +114,11 @@ void TProgram::Patch1()
   OscPw[0] = 0.5;
   OscPw[1] = 0.4;
   OscPw[2] = 0;
+  
+  OscSync[0] = false;
+  OscSync[1] = false;
+  OscSync[2] = false;
+  
   OscLevel[0] = 0.5;
   OscLevel[1] = 0.5;
   OscLevel[2] = 1.0;
@@ -141,7 +150,7 @@ void TProgram::Patch1()
   Modulations.push_back({ TModulation::MODWHEEL, -octaves(7), TModulation::F1_CUTOFF });
   Modulations.push_back({ TModulation::MODWHEEL, -octaves(7), TModulation::F2_CUTOFF });
 
-  //  Effects[0].reset(new TDelayFx());
+  Effects[0].reset(new TDelayFx());
 }
 
 void TProgram::Patch2()
@@ -156,6 +165,11 @@ void TProgram::Patch2()
   OscPw[0] = 0;
   OscPw[1] = 0;
   OscPw[2] = 0;
+
+  OscSync[0] = false;
+  OscSync[1] = false;
+  OscSync[2] = false;  
+
   OscLevel[0] = 1.0;
   OscLevel[1] = 1.0;
   OscLevel[2] = 1.0;
@@ -186,7 +200,7 @@ void TProgram::Patch2()
   Modulations.push_back({ TModulation::LFO1, cents(10), TModulation::OSC1_FREQ });
   Modulations.push_back({ TModulation::LFO1, cents(-10), TModulation::OSC2_FREQ });
 
-  //  Effects[0].reset(new TDelayFx());
+  Effects[0].reset();
 }
 
 void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out)
@@ -224,6 +238,9 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
       v->Oscillators[0]->SetPulseWidth(OscPw[0] * ModulationFactor(TModulation::OSC1_PW, *voice));
       v->Oscillators[1]->SetPulseWidth(OscPw[1] * ModulationFactor(TModulation::OSC2_PW, *voice));
       v->Oscillators[2]->SetPulseWidth(OscPw[2] * ModulationFactor(TModulation::OSC3_PW, *voice));
+      v->Oscillators[0]->SetSync(OscSync[0]);
+      v->Oscillators[1]->SetSync(OscSync[1]);
+      v->Oscillators[2]->SetSync(OscSync[2]);
       v->OscPan[0].SetPan(OscLevel[0] * ModulationFactor(TModulation::OSC1_LEVEL, *voice),
 			  ModulationValue(TModulation::OSC1_PAN, *voice));
       v->OscPan[1].SetPan(OscLevel[1] * ModulationFactor(TModulation::OSC2_LEVEL, *voice),
@@ -485,6 +502,8 @@ void TProgram::SetController(TUnsigned7 cc, TUnsigned7 value)
     SetParameter(1, PARAM_PULSE_WIDTH, value, true); break;
   case 56: // OSC2 level
     SetParameter(1, PARAM_OSC_LEVEL, value, true); break;
+  case 49: // OSC3 hard syncing OSC2
+    SetParameter(1, PARAM_OSC_SYNC, value, true); break;
 
   case 42: // OSC3 octave
     SetParameter(2, PARAM_OSC_OCTAVE, value, true); break;
@@ -546,6 +565,8 @@ void TProgram::SetParameter(int unit, TParameter param, int value, bool echo)
     LfoFrequency[unit] = fractvalue;
   } else if (param == PARAM_PULSE_WIDTH) {
     OscPw[unit] = fractvalue;
+  } else if (param == PARAM_OSC_SYNC) {
+    OscSync[unit] = !!value;
   } else if (param == PARAM_DISTORTION) {
     WaveShaper[unit] = fractvalue;
   } else if (param == PARAM_ENVELOPE) {
@@ -597,6 +618,9 @@ void TProgram::DumpParameters()
   ParameterChanged(0, PARAM_OSC_TYPE, OscType[0]);
   ParameterChanged(1, PARAM_OSC_TYPE, OscType[1]);
   ParameterChanged(2, PARAM_OSC_TYPE, OscType[2]);
+  ParameterChanged(0, PARAM_OSC_SYNC, OscSync[0]);
+  ParameterChanged(1, PARAM_OSC_SYNC, OscSync[1]);
+  ParameterChanged(2, PARAM_OSC_SYNC, OscSync[2]);
   ParameterChanged(0, PARAM_DISTORTION, WaveShaper[0] * 128);
   ParameterChanged(1, PARAM_DISTORTION, WaveShaper[1] * 128);
 

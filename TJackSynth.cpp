@@ -50,8 +50,10 @@ void TJackSynth::HandleMidi(std::vector<uint8_t> data)
     if (channel == 0) {
       printf("Program change: %d\n", data[1]);
       if (data[1] == 0x00) {
+	Program.Patch0();
+      } else if (data[1] == 0x01) {
 	Program.Patch1();
-      } else {
+      } else if (data[1] == 0x02) {
 	Program.Patch2();
       }
       Program.DumpParameters();

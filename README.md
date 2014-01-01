@@ -13,7 +13,7 @@ make
 Playing
 =======
 
-Hook up a MIDI keyboard, use JACK to route MIDI and audio. Program change messages can be used to trigger presets, MIDI sysex for parameter settings (see the files in patchpirate/ for a summary).
+Hook up a MIDI keyboard, use JACK to route MIDI and audio. Program change messages can be used to trigger presets, MIDI CC (Waldorf-like mapping) or sysex for parameter settings (see the files in patchpirate/ for a summary).
 
 
 Evaluating performance
