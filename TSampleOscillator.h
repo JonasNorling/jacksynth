@@ -15,9 +15,10 @@ public:
   { }
   void SetFrequency(TFrequency hz) { Hz = hz; }
   void SetPulseWidth(float) { }
+  void SetSync(bool sync) { }
   void SetSample(TSampleBuffer* sample) { Sample = sample; }
 
-  void Process(TSampleBuffer& in, TSampleBuffer& out);
+  void Process(TSampleBuffer& in, TSampleBuffer& out, TSampleBuffer& syncin, TSampleBuffer& syncout);
 
 private:
   double Hz;

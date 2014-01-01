@@ -1,6 +1,6 @@
 #include "TSampleOscillator.h"
 
-void TSampleOscillator::Process(TSampleBuffer& in, TSampleBuffer& out)
+void TSampleOscillator::Process(TSampleBuffer& in, TSampleBuffer& out, TSampleBuffer& syncin, TSampleBuffer& syncout)
 {
   if (Sample) {
     for (TSample& outs : out) {
@@ -10,4 +10,5 @@ void TSampleOscillator::Process(TSampleBuffer& in, TSampleBuffer& out)
       Scanpos += float(Hz)/TGlobal::HzA4;
     }
   }
+  syncout.Clear();
 }

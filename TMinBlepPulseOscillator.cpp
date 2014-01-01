@@ -32,7 +32,7 @@ TMinBlepPulseOscillator::TMinBlepPulseOscillator() :
   std::fill(Buffer, Buffer+BufferLen, 0);
 }
 
-void TMinBlepPulseOscillator::Process(TSampleBuffer& in, TSampleBuffer& out)
+void TMinBlepPulseOscillator::Process(TSampleBuffer& in, TSampleBuffer& out, TSampleBuffer& syncin, TSampleBuffer& syncout)
 {
   const float A = TGlobal::OscAmplitude;
   for (TSample& outs : out) {
@@ -78,4 +78,5 @@ void TMinBlepPulseOscillator::Process(TSampleBuffer& in, TSampleBuffer& out)
     Buffer[BufferPos % BufferLen] = Target;
     BufferPos++;
   }
+  syncout.Clear();
 }

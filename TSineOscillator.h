@@ -13,8 +13,9 @@ public:
   }
   void SetFrequency(TFrequency hz) { Hz = hz; }
   void SetPulseWidth(float) { }
+  void SetSync(bool sync) { }
 
-  void Process(TSampleBuffer& in, TSampleBuffer& out)
+  void Process(TSampleBuffer& in, TSampleBuffer& out, TSampleBuffer& syncin, TSampleBuffer& syncout)
   {
     // FIXME: This is quite slow for some reason. Also, don't
     // increment scanpos for ever, it's going to lose precision.
@@ -22,6 +23,7 @@ public:
       outs = TGlobal::OscAmplitude * sinf(Scanpos);
       Scanpos += Hz/TGlobal::SampleRate * 2*M_PI;
     }
+    syncout.Clear();
   }
 
 private:

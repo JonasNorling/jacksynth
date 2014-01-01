@@ -60,16 +60,18 @@ void TProgram::Patch0()
   SetupConstantModulations();
 
   OscType[0] = OSC_SAW;
-  OscType[1] = OSC_OFF;
+  OscType[1] = OSC_SAW;
   OscType[2] = OSC_OFF;
 
   OscPw[0] = 0;
   OscPw[1] = 0;
   OscPw[2] = 0;
 
-  OscLevel[0] = 1.0;
+  OscLevel[0] = 0.0;
   OscLevel[1] = 1.0;
-  OscLevel[2] = 1.0;
+  OscLevel[2] = 0.0;
+
+  Modulations[C_OSC1_DETUNE].Amount = semitones(1);
 
   WaveShaper[0] = 0.0;
   WaveShaper[1] = 0.0;
@@ -235,11 +237,16 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
     }
     TimerUpdates.Stop();
  
+    // Buffers for rendering samples into
     TSample data[4][subframe];
     TSampleBuffer buf[4] = { {data[0], subframe},
 			     {data[1], subframe},
 			     {data[2], subframe},
 			     {data[3], subframe} };
+
+    // Buffer for keeping track of hardsync between oscillators
+    TSample hardsyncdata[subframe];
+    TSampleBuffer hardsync(hardsyncdata, subframe);
 
     TimerSamples.Start();
     // Generate audio samples for left and right channel
@@ -251,12 +258,14 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
       TSampleBuffer outl(out[0]->Slice(i, i+subframe));
       TSampleBuffer outr(out[1]->Slice(i, i+subframe));
 
-      // Render oscillators to 0 and pan to 2 & 3
+      // Render oscillators to 0 and pan to 2 & 3.
+      // Hard sync is propagated from one oscillator to the next.
       buf[2].Clear();
       buf[3].Clear();
+      hardsync.Clear();
       for (int i = 0; i < TGlobal::Oscillators; i++) {
 	buf[0].Clear();
-	v->Oscillators[i]->Process(inl, buf[0]);
+	v->Oscillators[i]->Process(inl, buf[0], hardsync, hardsync);
 	v->OscPan[i].Process(buf[0], buf[2], buf[3]);
       }
 

@@ -17,7 +17,9 @@ public:
   /* pw = 0 --> 50% duty cycle
    * pw = 1 --> 100% duty cycle */
   void SetPulseWidth(float pw) { NextPw = clamp(pw, 0.0f, 0.95f); }
-  void Process(TSampleBuffer& in, TSampleBuffer& out);
+  void SetSync(bool sync) { }
+
+  void Process(TSampleBuffer& in, TSampleBuffer& out, TSampleBuffer& syncin, TSampleBuffer& syncout);
 
 private:
   TFrequency Hz;

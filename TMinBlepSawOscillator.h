@@ -13,10 +13,13 @@ public:
 
   void SetFrequency(TFrequency hz) { Hz = hz; }
   void SetPulseWidth(float) { }
-  void Process(TSampleBuffer& in, TSampleBuffer& out);
+  void SetSync(bool sync) { Sync = sync; }
+
+  void Process(TSampleBuffer& in, TSampleBuffer& out, TSampleBuffer& syncin, TSampleBuffer& syncout);
 
 private:
   TFrequency Hz;
+  bool Sync;
   double Scanpos;
   static const int BufferLen = minblep::length;
   TSample Buffer[BufferLen];

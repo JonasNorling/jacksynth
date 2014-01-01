@@ -16,15 +16,17 @@ public:
 
   TWavetableOscillator();
   void SetFrequency(TFrequency hz) { Hz = hz; }
-  void SetPulseWidth(float) { };
+  void SetPulseWidth(float) { }
+  void SetSync(bool sync) { }
 
-  void Process(TSampleBuffer& in, TSampleBuffer& out)
+  void Process(TSampleBuffer& in, TSampleBuffer& out, TSampleBuffer& syncin, TSampleBuffer& syncout)
   {
     for (TSample& outs : out) {
       outs = linterpolate(Wave, Wavelength, Scanpos);
       Scanpos += (Hz*Wavelength)/TGlobal::SampleRate;
       if (Scanpos >= Wavelength) Scanpos -= Wavelength;
     }
+    syncout.Clear();
   }
 
 private:

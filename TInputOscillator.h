@@ -13,9 +13,11 @@ public:
   }
   void SetFrequency(TFrequency) { }
   void SetPulseWidth(float) { }
+  void SetSync(bool sync) { }
 
-  void Process(TSampleBuffer& in, TSampleBuffer& out)
+  void Process(TSampleBuffer& in, TSampleBuffer& out, TSampleBuffer& syncin, TSampleBuffer& syncout)
   {
     out.AddSamples(in);
+    syncout.Clear();
   }
 };
