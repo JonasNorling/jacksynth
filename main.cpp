@@ -81,6 +81,10 @@ void testSignalFilterSweep(TJackSynth& synth)
 {
   int dist = 8000;
   synth.HandleMidi({0xf0, 0x7f, PARAM_DISTORTION, 1, hi7(dist), lo7(dist), 0xf7});
+  float hz = 8000;
+  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
+  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
+
   synth.HandleMidi({0x90, TGlobal::MidiNoteA4, 0x70});
   synth.Process(int(0.5*44100) & ~0x7);
 

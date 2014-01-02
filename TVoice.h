@@ -4,6 +4,7 @@
 #include "IOscillator.h"
 #include "TButterworthLpFilter.h"
 #include "TResonantLpFilter.h"
+#include "TSvfFilter.h"
 #include "TEnvelope.h"
 #include "TAmplifier.h"
 #include "TLfo.h"
@@ -42,7 +43,7 @@ public:
   std::unique_ptr<IOscillator> Oscillators[TGlobal::Oscillators];
   TPan OscPan[TGlobal::Oscillators];
   TWaveShaper WaveShaper[TGlobal::Filters];
-  TResonantLpFilter Filters[TGlobal::Filters];
+  TSvfFilter Filters[TGlobal::Filters];
   TPan FiltPan[TGlobal::Filters];
   TLfo Lfos[TGlobal::Lfos];
   TEnvelope AmpEg;

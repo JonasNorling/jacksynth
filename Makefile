@@ -18,6 +18,7 @@ SRCS += TProgram.cpp
 SRCS += TResonantLpFilter.cpp
 SRCS += TSampleLoader.cpp
 SRCS += TSampleOscillator.cpp
+SRCS += TSvfFilter.cpp
 SRCS += TWavetableOscillator.cpp
 SRCS += liir.cpp
 SRCS += main.cpp
@@ -54,7 +55,7 @@ deps.mk: $(SRCS) $(TEST_SRCS)
 
 
 testspec: spectrogram.m $(EXE)
-	./$(EXE) --testsignal 1 > testdata.bin && octave --persist spectrogram.m
+	./$(EXE) --testsignal 2 > testdata.bin && octave --persist spectrogram.m
 
 testspeed: $(EXE)
 	/usr/bin/time ./$(EXE) --testsignal > /dev/null
