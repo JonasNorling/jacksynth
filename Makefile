@@ -54,7 +54,7 @@ deps.mk: $(SRCS) $(TEST_SRCS)
 
 
 testspec: spectrogram.m $(EXE)
-	./$(EXE) --testsignal > testdata.bin && octave --persist spectrogram.m
+	./$(EXE) --testsignal 1 > testdata.bin && octave --persist spectrogram.m
 
 testspeed: $(EXE)
 	/usr/bin/time ./$(EXE) --testsignal > /dev/null

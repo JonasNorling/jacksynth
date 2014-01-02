@@ -56,35 +56,10 @@ void send_midi(const std::vector<uint8_t>& data)
   MidiOutQueue.push(data);
 }
 
-void testSignal()
+void testSignalSawSweep(TJackSynth& synth)
 {
-  TFileAudioPort inputPortL("", TFileAudioPort::INPUT);
-  TFileAudioPort inputPortR("", TFileAudioPort::INPUT);
-  TAudioPortCollection inputPorts({&inputPortL, &inputPortR});
-  TFileAudioPort outputPortL("/dev/stdout", TFileAudioPort::OUTPUT);
-  TFileAudioPort outputPortR("/dev/null", TFileAudioPort::OUTPUT);
-  TAudioPortCollection outputPorts({&outputPortL, &outputPortR});
-
-  TGlobal::SampleRate = 44100;
-  TGlobal::NyquistFrequency = TGlobal::SampleRate / 2;
-  TJackSynth synth(inputPorts, outputPorts);
-
-  /*
-  synth.Process(int(0.3*44100) & ~0x7);
-  synth.HandleMidi({0x90, 70, 0x40}); // note 70, A# 466Hz
-  synth.Process(int(0.3*44100) & ~0x7);
-
-  synth.HandleMidi({0x80, 70, 0x40});
-  synth.HandleMidi({0x90, 81, 0x40}); // note 81, A 880Hz
-  synth.Process(int(0.3*44100) & ~0x7);
-
-  synth.HandleMidi({0x80, 81, 0x40});
-  synth.HandleMidi({0x90, 97, 0x40}); // note 97: C# 2217Hz
-  synth.Process(int(0.3*44100) & ~0x7);
-
-  synth.HandleMidi({0x80, 97, 0x40});
-  synth.Process(int(1.0*44100) & ~0x7);
-  */
+  // This code depends on the default patch being a fairly
+  // clean saw wave.
 
   synth.HandleMidi({0x90, 0, 0x40}); // note 0: 8.18 Hz
   synth.Process(int(0.5*44100) & ~0x7);
@@ -100,6 +75,22 @@ void testSignal()
   synth.Process(int(0.1*44100) & ~0x7);
   synth.HandleMidi({0x80, 33, 0x40}); // release note
   synth.Process(int(0.8*44100) & ~0x7);
+}
+
+void testSignalFilterSweep(TJackSynth& synth)
+{
+  int dist = 8000;
+  synth.HandleMidi({0xf0, 0x7f, PARAM_DISTORTION, 1, hi7(dist), lo7(dist), 0xf7});
+  synth.HandleMidi({0x90, TGlobal::MidiNoteA4, 0x70});
+  synth.Process(int(0.5*44100) & ~0x7);
+
+  for (float hz = 1; hz < 8000; hz++) {
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
+    synth.Process(32);
+  }
+
+  synth.Process(int(0.5*44100) & ~0x7);
 }
 
 void runInJack()
@@ -148,9 +139,9 @@ void runInJack()
 
 int main(int argc, char* argv[])
 {
-  bool testsignal = false;
+  int testsignal = 0;
 
-  struct option longopts[] = {{ "testsignal", no_argument, 0, 't' },
+  struct option longopts[] = {{ "testsignal", 1, 0, 't' },
                               { "help", 0, 0, 'h'},
                               { 0, 0, 0, 0}};
   int opt;
@@ -160,7 +151,7 @@ int main(int argc, char* argv[])
       std::cerr << "Help!" << std::endl;
       break;
     case 't':
-      testsignal = true;
+      testsignal = atoi(optarg);
       break;
     default:
       std::cerr << "Bah!" << std::endl;
@@ -169,7 +160,25 @@ int main(int argc, char* argv[])
   }
 
   if (testsignal) {
-    testSignal();
+    TFileAudioPort inputPortL("", TFileAudioPort::INPUT);
+    TFileAudioPort inputPortR("", TFileAudioPort::INPUT);
+    TAudioPortCollection inputPorts({&inputPortL, &inputPortR});
+    TFileAudioPort outputPortL("/dev/stdout", TFileAudioPort::OUTPUT);
+    TFileAudioPort outputPortR("/dev/null", TFileAudioPort::OUTPUT);
+    TAudioPortCollection outputPorts({&outputPortL, &outputPortR});
+
+    TGlobal::SampleRate = 44100;
+    TGlobal::NyquistFrequency = TGlobal::SampleRate / 2;
+    TJackSynth synth(inputPorts, outputPorts);
+
+    switch (testsignal) {
+    case 1:
+      testSignalSawSweep(synth);
+      break;
+    case 2:
+      testSignalFilterSweep(synth);
+      break;
+    }
   } else {
     signal(SIGINT, sigterm);
     signal(SIGTERM, sigterm);

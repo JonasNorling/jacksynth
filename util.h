@@ -21,6 +21,8 @@ static inline float octaves(float x) { return x; }
 static inline float semitones(float x) { return x/12; }
 static inline float cents(float x) { return x/1200; }
 static inline int ms_to_samples(int x) { return (TGlobal::SampleRate * x) / 1000; }
+static inline uint8_t hi7(int v) { return (v >> 7) & 0x7f; }
+static inline uint8_t lo7(int v) { return v & 0x7f; }
 
 class TTimer
 {
