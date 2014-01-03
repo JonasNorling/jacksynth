@@ -75,7 +75,10 @@ void TProgram::Patch0()
   OscLevel[1] = 1.0;
   OscLevel[2] = 0.0;
 
-  Modulations[C_OSC1_DETUNE].Amount = -cents(50);
+  // Enable hard-sync
+  //OscSync[1] = true;
+  //Modulations[C_OSC2_DETUNE].Amount = semitones(17);
+  //Modulations.push_back({ TModulation::LFO1, semitones(15), TModulation::OSC2_FREQ });
 
   WaveShaper[0] = 0.0;
   WaveShaper[1] = 0.0;
