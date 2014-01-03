@@ -55,7 +55,7 @@ deps.mk: $(SRCS) $(TEST_SRCS)
 
 
 testspec: spectrogram.m $(EXE)
-	./$(EXE) --testsignal 1 > testdata.bin && octave --persist spectrogram.m
+	./$(EXE) --testsignal 1 > spectrogramdata.bin && octave --persist spectrogram.m
 
 testspeed: $(EXE)
 	/usr/bin/time ./$(EXE) --testsignal > /dev/null
@@ -64,10 +64,10 @@ minBLEP/minblep: minBLEP/minblep.o minBLEP/main.o
 	$(CXX) -o $@ $^
 
 showbleps: minBLEP/minblep
-	minBLEP/minblep --zerocrossings 16 --oversampling 32 --type minblep > minBLEP/data.txt
+	minBLEP/minblep --zerocrossings 32 --oversampling 32 --type minblep > minBLEP/data.txt
 	octave --persist minBLEP/illustration.m
 
 minblep.h: minBLEP/minblep Makefile
-	minBLEP/minblep --zerocrossings 16 --oversampling 64 --header --type minblep > $@
+	minBLEP/minblep --zerocrossings 32 --oversampling 64 --header --type minblep > $@
 
 .PHONY: testspec showbleps

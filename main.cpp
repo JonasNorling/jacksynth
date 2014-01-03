@@ -68,13 +68,13 @@ void testSignalSawSweep(TJackSynth& synth)
   // Sweep
   synth.HandleMidi({0x90, 33, 0x40}); // note 33: A 55Hz
   synth.Process(int(0.2*44100) & ~0x7);
-  for (float octave = 0; octave < 6; octave += 0.001) {
+  for (float octave = 0; octave < 6; octave += 0.0005) {
     synth.SetPitchBend(octave * 6);
     synth.Process(16);
   }
-  synth.Process(int(0.1*44100) & ~0x7);
+  synth.Process(int(0.2*44100) & ~0x7);
   synth.HandleMidi({0x80, 33, 0x40}); // release note
-  synth.Process(int(0.8*44100) & ~0x7);
+  synth.Process(int(0.2*44100) & ~0x7);
 }
 
 void testSignalFilterSweep(TJackSynth& synth)

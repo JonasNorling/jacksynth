@@ -211,8 +211,9 @@ float *GenerateMinBLEP(int zeroCrossings, int overSampling)
 
   // Generate Sinc
 
-  a = (float)-zeroCrossings;
-  b = (float)zeroCrossings;
+  const float bandlimit = 0.9f;
+  a = bandlimit * (float)-zeroCrossings;
+  b = -a;
   for(i = 0; i < n; i++)
   {
     r = ((float)i) / ((float)(n - 1));
