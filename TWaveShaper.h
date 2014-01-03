@@ -50,9 +50,7 @@ public:
 
   void SetDepth(float depth)
   {
-    if (depth < 0) depth = 0;
-    if (depth > 0.99) depth = 0.99;
-    Depth = depth;
+    Depth = clamp(depth, 0.0f, 0.99f);
   }
 
 private:

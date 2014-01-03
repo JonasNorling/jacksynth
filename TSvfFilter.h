@@ -36,7 +36,8 @@ private:
     TSample q;
   } Coeffs;
 
-  TSample State[2];
+  TSample State1[2];
+  TSample State2[2];
   static const int Oversample = 2;
 
   static void Crunch(const TCoeffs coeffs, TSample* state,

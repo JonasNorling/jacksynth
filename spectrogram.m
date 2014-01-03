@@ -14,10 +14,10 @@ specgram(x, 2^nextpow2(window), Fs, window, window-step);
 figure(2);
 xlabel("time [s]");
 plot(t, x, "-b");
-hold on
+hold on;
 [b,a]=butter(3, 0.0005);
 plot(t, filter(b, a, x), "-r")
-hold off
+hold off;
 
 figure(3);
 fftstart=5200/1000*Fs; # Spectrum from 5.2s
@@ -29,4 +29,5 @@ rect_fft=fft(x(fftstart:fftstart+fftlen-1) ./ fftlen, fftlen);
 semilogy(freqs(1:fftlen/2), abs(rect_fft)(1:fftlen/2) .^ 2, "-r");
 hold on;
 semilogy(freqs(1:fftlen/2), abs(blackman_fft)(1:fftlen/2) .^ 2, "-b");
-axis([0 Fs/2])
+axis([0 Fs/2, 1e-16, 1e-1])
+hold off;

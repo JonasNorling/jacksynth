@@ -6,7 +6,7 @@ TSvfFilter::TSvfFilter()
   : Coeffs({.f=0.1f, .q=0.0f})
 {
   // Can't set cutoff, because sample rate may be unknown
-  SetQ(7.0f);
+  SetQ(2.5f);
 }
 
 void TSvfFilter::SetCutoff(int cutoff)
@@ -44,7 +44,16 @@ void TSvfFilter::Process(TSampleBuffer& in, TSampleBuffer& out)
 		 [this](const TSample& ins) -> TSample {
 		   TSample lp, hp, bp, br;
 		   for (int i=0; i < Oversample; i++) {
-		     Crunch(Coeffs, State, ins, lp, hp, bp, br);
+		     Crunch(Coeffs, State1, ins, lp, hp, bp, br);
+		   }
+		   return lp;
+		 });
+  std::transform(out.begin(), out.end(),
+		 out.begin(),
+		 [this](const TSample& ins) -> TSample {
+		   TSample lp, hp, bp, br;
+		   for (int i=0; i < Oversample; i++) {
+		     Crunch(Coeffs, State2, ins, lp, hp, bp, br);
 		   }
 		   return lp;
 		 });
