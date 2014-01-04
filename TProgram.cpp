@@ -86,6 +86,8 @@ void TProgram::Patch0()
   LfoFrequency[1] = 1;
   FilterCutoff[0] = 20000;
   FilterCutoff[1] = 20000;
+  FilterResonance[0] = 0.15;
+  FilterResonance[1] = 0.15;
   Envelope[0] = {Attack: 20, Decay: 0, Sustain: 1.0, Release: 20};
   Envelope[1] = {Attack: 20, Decay: 0, Sustain: 1.0, Release: 20};
 
@@ -142,6 +144,8 @@ void TProgram::Patch1()
   // the envelope up to 25600 Hz (8 octaves) (which is capped at Fs/2).
   FilterCutoff[0] = 100;
   FilterCutoff[1] = 100;
+  FilterResonance[0] = 0.15;
+  FilterResonance[1] = 0.15;
   Modulations.push_back({ TModulation::EG1, octaves(7), TModulation::F1_CUTOFF });
   Modulations.push_back({ TModulation::EG1, octaves(7), TModulation::F2_CUTOFF });
   // 100% keytracking
@@ -194,6 +198,8 @@ void TProgram::Patch2()
 
   FilterCutoff[0] = 6 * TGlobal::HzE3;
   FilterCutoff[1] = 6 * TGlobal::HzE3;
+  FilterResonance[0] = 0.15;
+  FilterResonance[1] = 0.15;
   Modulations.push_back({ TModulation::KEY, semitones(6), TModulation::F1_CUTOFF });
   Modulations.push_back({ TModulation::KEY, semitones(6), TModulation::F2_CUTOFF });
   Modulations.push_back({ TModulation::EG1, -octaves(2), TModulation::F1_CUTOFF });
@@ -252,6 +258,8 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
 			  ModulationValue(TModulation::OSC3_PAN, *voice));
       v->Filters[0].SetCutoff(FilterCutoff[0] * ModulationFactor(TModulation::F1_CUTOFF, *voice));
       v->Filters[1].SetCutoff(FilterCutoff[1] * ModulationFactor(TModulation::F2_CUTOFF, *voice));
+      v->Filters[0].SetQ(1 + FilterResonance[0] * 10);
+      v->Filters[1].SetQ(1 + FilterResonance[1] * 10);
       v->FiltPan[0].SetPan(1.0, ModulationValue(TModulation::F1_PAN, *voice));
       v->FiltPan[1].SetPan(1.0, ModulationValue(TModulation::F2_PAN, *voice));
     }
@@ -516,16 +524,18 @@ void TProgram::SetController(TUnsigned7 cc, TUnsigned7 value)
     SetParameter(2, PARAM_PULSE_WIDTH, value, true); break;
   case 58: // OSC3 level
 
-  case 69: // F1 cutoff
+  case 69: // 0x45 F1 cutoff
     SetParameter(0, PARAM_FILTER_CUTOFF_HZ, VAL2HZ_HI(value), true); break;
-  case 70: // F1 resonance
-  case 71: // F1 drive
+  case 70: // 0x46 F1 resonance
+    SetParameter(0, PARAM_FILTER_RESONANCE, value, true); break;
+  case 71: // 0x47 F1 drive
     SetParameter(0, PARAM_DISTORTION, value, true); break;
 
-  case 80: // F2 cutoff
+  case 80: // 0x50 F2 cutoff
     SetParameter(1, PARAM_FILTER_CUTOFF_HZ, VAL2HZ_HI(value), true); break;
-  case 81: // F2 resonance
-  case 82: // F2 drive
+  case 81: // 0x51 F2 resonance
+    SetParameter(1, PARAM_FILTER_RESONANCE, value, true); break;
+  case 82: // 0x52 F2 drive
     SetParameter(1, PARAM_DISTORTION, value, true); break;
 
   case  95: // Filter env attack
@@ -564,6 +574,9 @@ void TProgram::SetParameter(int unit, TParameter param, int value, bool echo)
 
   if (param == PARAM_FILTER_CUTOFF_HZ) {
     FilterCutoff[unit] = value;
+  }
+  else if (param == PARAM_FILTER_RESONANCE) {
+    FilterResonance[unit] = fractvalue;
   } else if (param == PARAM_LFO_FREQUENCY_FRACHZ) {
     LfoFrequency[unit] = fractvalue;
   } else if (param == PARAM_PULSE_WIDTH) {

@@ -72,6 +72,8 @@
       <g label="Filter">
 	<p b="0:1" n="0x0000" label="F1 co Hz" range="0:8000"/>
 	<p b="2:3" n="0x0001" label="F2 co Hz" range="0:8000"/>
+	<p b="4:5" n="0x0a00" label="F1 reso" range="0(0%):127(100%)"/>
+	<p b="4:5" n="0x0a01" label="F2 reso" range="0(0%):127(100%)"/>
 	<p b="0:1" n="0x0300" label="F1 Dist" range="0(0%):127(100%)"/>
 	<p b="2:3" n="0x0301" label="F2 Dist" range="0(0%):127(100%)"/>
       </g>

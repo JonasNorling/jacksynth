@@ -56,6 +56,7 @@ enum TParameter {
   PARAM_OSC_DETUNE = 0x07,
   PARAM_OSC_OCTAVE = 0x08,
   PARAM_OSC_SYNC = 0x09,
+  PARAM_FILTER_RESONANCE = 0x0a,
   PARAM_MODULATION0 = 0x20
 };
 
@@ -134,6 +135,7 @@ private:
 
   // Patch configuration
   TFrequency FilterCutoff[TGlobal::Filters];
+  TFraction FilterResonance[TGlobal::Filters];
   TFrequency LfoFrequency[TGlobal::Lfos];
   TOscType OscType[TGlobal::Oscillators];
   bool OscSync[TGlobal::Oscillators];
