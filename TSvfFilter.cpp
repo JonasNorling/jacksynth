@@ -6,7 +6,7 @@ TSvfFilter::TSvfFilter()
   : Coeffs({.f=0.1f, .q=0.0f})
 {
   // Can't set cutoff, because sample rate may be unknown
-  SetQ(2.5f);
+  SetResonance(0.0f);
 }
 
 void TSvfFilter::SetCutoff(int cutoff)
@@ -17,8 +17,9 @@ void TSvfFilter::SetCutoff(int cutoff)
   Coeffs.f = 2.0f * sinf(M_PI * fcutoff);
 }
 
-void TSvfFilter::SetQ(float q)
+void TSvfFilter::SetResonance(TFraction resonance)
 {
+  float q = 1.0f + resonance * 5;
   Coeffs.q = 1.0f / q;
 }
 

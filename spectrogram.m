@@ -1,7 +1,7 @@
 # Requires extra packages:
 # apt-get install octave-signal
 
-fid=fopen("spectrogramdata.bin", "r");
+fid=fopen(filename, "r");
 x=fread(fid, Inf, "float");
 Fs=44100;
 t=1/Fs*(0:(size(x)(1)-1));

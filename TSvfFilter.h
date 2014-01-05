@@ -27,7 +27,7 @@ public:
   TSvfFilter();
 
   void SetCutoff(int cutoff);
-  void SetQ(float q);
+  void SetResonance(TFraction resonance);
   void Process(TSampleBuffer& in, TSampleBuffer& out);
 
 private:

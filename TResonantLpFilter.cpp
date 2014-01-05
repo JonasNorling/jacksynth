@@ -22,6 +22,16 @@ TResonantLpFilter::TResonantLpFilter()
   std::fill(D, D+N, 0);
 }
 
+void TResonantLpFilter::SetResonance(TFraction resonance)
+{
+  float q = 1 + resonance * 20;
+  if (Resonance == q) {
+    return;
+  }
+  Resonance = q;
+  CalculateCoeffs();
+}
+
 void TResonantLpFilter::SetCutoff(int cutoff)
 {
   float fcutoff = float(cutoff) / TGlobal::NyquistFrequency;
@@ -30,7 +40,11 @@ void TResonantLpFilter::SetCutoff(int cutoff)
     return;
   }
   Cutoff = fcutoff; // 0..1
+  CalculateCoeffs();
+}
 
+void TResonantLpFilter::CalculateCoeffs()
+{
   double omega = Cutoff*M_PI; //peak freq
   double g = Resonance; //peak mag
 

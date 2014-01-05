@@ -53,9 +53,20 @@ deps.mk: $(SRCS) $(TEST_SRCS)
 	done
 
 
+spectrogramdata1.bin: $(EXE)
+	./$(EXE) --testsignal 1 > $@
 
-testspec: spectrogram.m $(EXE)
-	./$(EXE) --testsignal 1 > spectrogramdata.bin && octave --persist spectrogram.m
+spectrogramdata2.bin: $(EXE)
+	./$(EXE) --testsignal 2 > $@
+
+%.wav: %.bin
+	sox -c 1 -r 44100 -t f32 $< $@
+
+testspec1: spectrogram.m $(EXE) spectrogramdata1.bin spectrogramdata1.wav
+	octave --persist --eval "filename='spectrogramdata1.bin'" spectrogram.m
+
+testspec2: spectrogram.m $(EXE) spectrogramdata2.bin spectrogramdata2.wav
+	octave --persist --eval "filename='spectrogramdata2.bin'" spectrogram.m
 
 testspeed: $(EXE)
 	/usr/bin/time ./$(EXE) --testsignal > /dev/null

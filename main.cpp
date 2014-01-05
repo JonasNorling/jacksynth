@@ -79,11 +79,48 @@ void testSignalSawSweep(TJackSynth& synth)
 
 void testSignalFilterSweep(TJackSynth& synth)
 {
-  int dist = 8000;
-  synth.HandleMidi({0xf0, 0x7f, PARAM_DISTORTION, 1, hi7(dist), lo7(dist), 0xf7});
-  float hz = 8000;
-  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
-  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
+  int value = 8000;
+  synth.HandleMidi({0xf0, 0x7f, PARAM_DISTORTION, 1, hi7(value), lo7(value), 0xf7});
+  value = 8000;
+  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(value), lo7(value), 0xf7});
+  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(value), lo7(value), 0xf7});
+
+  /* Low Q */
+  value = 0;
+  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 0, hi7(value), lo7(value), 0xf7});
+  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 1, hi7(value), lo7(value), 0xf7});
+
+  synth.HandleMidi({0x90, TGlobal::MidiNoteA4, 0x70});
+  synth.Process(int(0.5*44100) & ~0x7);
+
+  for (float hz = 1; hz < 8000; hz++) {
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
+    synth.Process(32);
+  }
+
+  synth.Process(int(0.5*44100) & ~0x7);
+
+  /* Medium Q */
+  value = 12;
+  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 0, hi7(value), lo7(value), 0xf7});
+  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 1, hi7(value), lo7(value), 0xf7});
+
+  synth.HandleMidi({0x90, TGlobal::MidiNoteA4, 0x70});
+  synth.Process(int(0.5*44100) & ~0x7);
+
+  for (float hz = 8000; hz > 1; hz--) {
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
+    synth.Process(32);
+  }
+
+  synth.Process(int(0.5*44100) & ~0x7);
+
+  /* High Q */
+  value = 127;
+  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 0, hi7(value), lo7(value), 0xf7});
+  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 1, hi7(value), lo7(value), 0xf7});
 
   synth.HandleMidi({0x90, TGlobal::MidiNoteA4, 0x70});
   synth.Process(int(0.5*44100) & ~0x7);

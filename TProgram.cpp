@@ -258,8 +258,8 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
 			  ModulationValue(TModulation::OSC3_PAN, *voice));
       v->Filters[0].SetCutoff(FilterCutoff[0] * ModulationFactor(TModulation::F1_CUTOFF, *voice));
       v->Filters[1].SetCutoff(FilterCutoff[1] * ModulationFactor(TModulation::F2_CUTOFF, *voice));
-      v->Filters[0].SetQ(1 + FilterResonance[0] * 10);
-      v->Filters[1].SetQ(1 + FilterResonance[1] * 10);
+      v->Filters[0].SetResonance(FilterResonance[0]);
+      v->Filters[1].SetResonance(FilterResonance[1]);
       v->FiltPan[0].SetPan(1.0, ModulationValue(TModulation::F1_PAN, *voice));
       v->FiltPan[1].SetPan(1.0, ModulationValue(TModulation::F2_PAN, *voice));
     }
