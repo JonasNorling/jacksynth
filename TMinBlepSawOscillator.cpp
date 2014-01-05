@@ -51,7 +51,10 @@ void TMinBlepSawOscillator::Process(TSampleBuffer& in, TSampleBuffer& out, TSamp
       syncout[sn] = 0;
     }
 
-    out[sn] += A * (0.5 + Scanpos - Buffer[BufferPos % BufferLen]);
+    // Correct for the fact that the BLEP has an average (integral) that is different from a perfect step
+    TSample offsetCorrection = (minblep::integral - minblep::length) * pace;
+
+    out[sn] += A * (0.5 + Scanpos - Buffer[BufferPos % BufferLen] + offsetCorrection);
     Buffer[BufferPos % BufferLen] = 1;
     BufferPos++;
   }

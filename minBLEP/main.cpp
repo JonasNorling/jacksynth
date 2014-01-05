@@ -100,6 +100,11 @@ int main(int argc, char* argv[])
     return 1;
   }
 
+  float integral = 0;
+  for (int i = 0; i < n; i++) {
+    integral += step[i] / overSampling;
+  }
+
   if (!header) {
     for (int i = 0; i < n; i++) {
       printf("%.3f\n", step[i]);
@@ -116,9 +121,10 @@ int main(int argc, char* argv[])
     printf("namespace minblep {\n"
 	   "static const int zeroCrossings = %d;\n"
 	   "static const int  overSampling = %d;\n"
-	   "static const int   tablelength = %d;\n\n"
-	   "static const int        length = %d;\n\n",
-	   zeroCrossings, overSampling, n, n / overSampling);
+	   "static const int   tablelength = %d;\n"
+	   "static const int        length = %d;\n"
+	   "static const float    integral = %f;\n\n",
+	   zeroCrossings, overSampling, n, n / overSampling, integral);
     
     printf("static const float table[tablelength] = {\n");
     for (int i = 0; i < n; i+=4) {
