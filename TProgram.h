@@ -20,6 +20,7 @@ public:
     LFO2,      // -1..1
     EG1,       // 0..1
     VELOCITY,  // 0..1
+    EG1_TIMES_VELO, // 0..1
     MODWHEEL   // 0..1
   } Source;
   float Amount; // in octaves (typically -1..1)
@@ -89,6 +90,7 @@ public:
   void Patch0();
   void Patch1();
   void Patch2();
+  void Patch3();
 
   void NoteOn(TUnsigned7 note, TUnsigned7 velocity);
   void NoteOff(TUnsigned7 note, TUnsigned7 velocity);

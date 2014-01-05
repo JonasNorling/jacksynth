@@ -212,6 +212,66 @@ void TProgram::Patch2()
   Effects[0].reset();
 }
 
+/*
+ * An attempt to duplicate Blofeld's B003 microQ Plus
+ */
+void TProgram::Patch3()
+{
+  Modulations.clear();
+  SetupConstantModulations();
+
+  OscType[0] = OSC_SAW;
+  OscType[1] = OSC_SAW;
+  OscType[2] = OSC_SAW;
+
+  OscSync[0] = false;
+  OscSync[1] = false;
+  OscSync[2] = false;
+
+  Modulations[C_OSC1_OCTAVE].Amount = octaves(-1); // 16'
+  Modulations[C_OSC1_PAN].Amount = -1;
+  Modulations[C_OSC1_DETUNE].Amount = cents(+8/64.0*100.0);
+  Modulations[C_OSC2_OCTAVE].Amount = octaves(-1); // 16'
+  Modulations[C_OSC2_PAN].Amount = 1;
+  Modulations[C_OSC2_DETUNE].Amount = cents(-8/64.0*100.0);
+  Modulations[C_OSC3_OCTAVE].Amount = octaves(-1); // 16'
+  Modulations[C_OSC3_PAN].Amount = 0;
+  Modulations[C_OSC3_DETUNE].Amount = cents(0);
+
+  // Bass boost
+  Modulations.push_back({ TModulation::KEY, -0.2, TModulation::OSC1_LEVEL });
+  Modulations.push_back({ TModulation::KEY, -0.2, TModulation::OSC2_LEVEL });
+  Modulations.push_back({ TModulation::KEY, -0.2, TModulation::OSC3_LEVEL });
+
+  OscLevel[0] = 1.0f;
+  OscLevel[1] = 1.0f;
+  OscLevel[2] = 1.0f;
+
+  Modulations[C_F1_PAN].Amount = -1;
+  Modulations[C_F2_PAN].Amount = 1;
+
+  // F1: PPG LP, cutoff 25 (49Hz), resonance 43, env velocity: 28
+  // F2: PPG LP, cutoff 24 (46Hz), resonance 41, env velocity: 28
+  FilterCutoff[0] = 49;
+  FilterCutoff[1] = 46;
+  FilterResonance[0] = 0.3;
+  FilterResonance[1] = 0.3;
+  Modulations.push_back({ TModulation::EG1_TIMES_VELO, octaves(8), TModulation::F1_CUTOFF });
+  Modulations.push_back({ TModulation::EG1_TIMES_VELO, octaves(8), TModulation::F2_CUTOFF });
+
+  WaveShaper[0] = 0.0;
+  WaveShaper[1] = 0.0;
+  LfoFrequency[0] = 1;
+  LfoFrequency[1] = 1;
+  Envelope[0] = {Attack:  10, Decay: 0, Sustain: 1.0, Release: 30};
+  Envelope[1] = {Attack: 100, Decay: 3000, Sustain: 31/127.0f, Release: 40};
+
+  TDelayFx* fx = new TDelayFx();
+  fx->SetDelay(250);
+  fx->SetFeedback(0.5);
+  Effects[0].reset(fx);
+}
+
 void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out, TSampleBufferCollection& into)
 {
   TimerProcess.Start();
@@ -388,6 +448,7 @@ inline float TProgram::ModulationValue(TModulation::TDestination d, const TSound
       case TModulation::LFO2: mod += m.Amount * voice.voice->Lfos[1].GetValue(); break;
       case TModulation::EG1: mod += m.Amount * voice.voice->FiltEg.GetValue(); break;
       case TModulation::VELOCITY: mod += m.Amount * voice.voice->Velocity/128.0; break;
+      case TModulation::EG1_TIMES_VELO: mod += m.Amount * voice.voice->FiltEg.GetValue() * voice.voice->Velocity/128.0f; break;
       case TModulation::MODWHEEL: mod += m.Amount * ModWheel; break;
       }
     }
