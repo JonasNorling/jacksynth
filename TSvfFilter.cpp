@@ -3,10 +3,11 @@
 #include <cassert>
 
 TSvfFilter::TSvfFilter()
-  : Coeffs({.f=0.1f, .q=0.0f})
+  : Coeffs{.f=0.1f, .q=0.0f}, Mix{1.0f, 0.0f, 0.0f}, WaveShaper()
 {
   // Can't set cutoff, because sample rate may be unknown
   SetResonance(0.0f);
+  WaveShaper.SetDepth(1.0f);
 }
 
 void TSvfFilter::SetCutoff(int cutoff)
@@ -25,17 +26,13 @@ void TSvfFilter::SetResonance(TFraction resonance)
 
 void TSvfFilter::Crunch(const TCoeffs coeffs, TSample* state,
 			const TSample& ins,
-			TSample& lp, TSample& hp,
-			TSample& bp, TSample& br)
+			TSample& lp, TSample& hp, TSample& bp)
 {
-  const float clamping = 5.0f;
-
   lp = state[0] * coeffs.f + state[1];
-  state[1] = clamp(lp, -clamping, clamping);
+  state[1] = lp;
   hp = ins - lp - coeffs.q * state[0];
   bp = hp * coeffs.f + state[0];
-  state[0] = clamp(bp, -clamping, clamping);
-  br = lp + hp;
+  state[0] = bp;
 }
 
 void TSvfFilter::Process(TSampleBuffer& in, TSampleBuffer& out)
@@ -43,19 +40,19 @@ void TSvfFilter::Process(TSampleBuffer& in, TSampleBuffer& out)
   std::transform(in.begin(), in.end(),
 		 out.begin(),
 		 [this](const TSample& ins) -> TSample {
-		   TSample lp, hp, bp, br;
+		   TSample lp, hp, bp;
 		   for (int i=0; i < Oversample; i++) {
-		     Crunch(Coeffs, State1, ins, lp, hp, bp, br);
+		     Crunch(Coeffs, State1, ins, lp, hp, bp);
 		   }
-		   return lp;
+		   return WaveShaper.Tanh(Mix[0] * lp + Mix[1] * hp + Mix[2] * bp);
 		 });
   std::transform(out.begin(), out.end(),
 		 out.begin(),
 		 [this](const TSample& ins) -> TSample {
-		   TSample lp, hp, bp, br;
+		   TSample lp, hp, bp;
 		   for (int i=0; i < Oversample; i++) {
-		     Crunch(Coeffs, State2, ins, lp, hp, bp, br);
+		     Crunch(Coeffs, State2, ins, lp, hp, bp);
 		   }
-		   return lp;
+		   return WaveShaper.Tanh(Mix[0] * lp + Mix[1] * hp + Mix[2] * bp);
 		 });
 }

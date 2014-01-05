@@ -7,3 +7,5 @@ minBLEP/*.o
 minBLEP/minblep
 minblep.h
 testdata.bin
+spectrogramdata*.bin
+spectrogramdata*.wav

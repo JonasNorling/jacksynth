@@ -79,21 +79,28 @@ void testSignalSawSweep(TJackSynth& synth)
 
 void testSignalFilterSweep(TJackSynth& synth)
 {
+  const float speed = 1.001f;
+
   int value = 8000;
   synth.HandleMidi({0xf0, 0x7f, PARAM_DISTORTION, 1, hi7(value), lo7(value), 0xf7});
   value = 8000;
   synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(value), lo7(value), 0xf7});
   synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(value), lo7(value), 0xf7});
+  value = 0;
+  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 0, hi7(value), lo7(value), 0xf7});
+  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 1, hi7(value), lo7(value), 0xf7});
+
+  synth.HandleMidi({0x90, TGlobal::MidiNoteA4, 0x70});
+  synth.HandleMidi({0x90, TGlobal::MidiNoteA4 - 3*12, 0x70});
+
+  synth.Process(int(0.5*44100) & ~0x7);
 
   /* Low Q */
   value = 0;
   synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 0, hi7(value), lo7(value), 0xf7});
   synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 1, hi7(value), lo7(value), 0xf7});
 
-  synth.HandleMidi({0x90, TGlobal::MidiNoteA4, 0x70});
-  synth.Process(int(0.5*44100) & ~0x7);
-
-  for (float hz = 1; hz < 8000; hz++) {
+  for (float hz = 10; hz < 8000; hz *= speed) {
     synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
     synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
     synth.Process(32);
@@ -106,10 +113,7 @@ void testSignalFilterSweep(TJackSynth& synth)
   synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 0, hi7(value), lo7(value), 0xf7});
   synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 1, hi7(value), lo7(value), 0xf7});
 
-  synth.HandleMidi({0x90, TGlobal::MidiNoteA4, 0x70});
-  synth.Process(int(0.5*44100) & ~0x7);
-
-  for (float hz = 8000; hz > 1; hz--) {
+  for (float hz = 10; hz < 8000; hz *= speed) {
     synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
     synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
     synth.Process(32);
@@ -122,10 +126,7 @@ void testSignalFilterSweep(TJackSynth& synth)
   synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 0, hi7(value), lo7(value), 0xf7});
   synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 1, hi7(value), lo7(value), 0xf7});
 
-  synth.HandleMidi({0x90, TGlobal::MidiNoteA4, 0x70});
-  synth.Process(int(0.5*44100) & ~0x7);
-
-  for (float hz = 1; hz < 8000; hz++) {
+  for (float hz = 10; hz < 8000; hz *= speed) {
     synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
     synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
     synth.Process(32);

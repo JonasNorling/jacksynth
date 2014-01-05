@@ -8,7 +8,7 @@ class TWaveShaper
 {
   UNCOPYABLE(TWaveShaper);
 
-private:
+public:
   TSample Rectify(TSample s)
   {
     // FIXME: Respect Depth
@@ -35,7 +35,11 @@ private:
     return b * (1+k) * x / (1 + k*fabsf(x));
   }
 
-public:
+  TSample Tanh(TSample x)
+  {
+    return Depth*tanhf(x) + (1-Depth)*x;
+  }
+
   TWaveShaper() :
     Depth(0)
     { }
