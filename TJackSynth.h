@@ -14,7 +14,8 @@ class TJackSynth
 {
 public:
   TJackSynth(TAudioPortCollection& inputPorts,
-	     TAudioPortCollection& outputPorts);
+	     TAudioPortCollection& outputPorts,
+	     TAudioPortCollection& intermediateOutPorts);
 
   virtual ~TJackSynth();
   int Process(jack_nframes_t nframes);
@@ -25,6 +26,7 @@ public:
 private:
   TAudioPortCollection& InputPorts;
   TAudioPortCollection& OutputPorts;
+  TAudioPortCollection& IntermediateOutPorts;
 
   // Just one program for now, we should go multi-timbral in the future
   TProgram Program;

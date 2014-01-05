@@ -212,7 +212,7 @@ void TProgram::Patch2()
   Effects[0].reset();
 }
 
-void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out)
+void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out, TSampleBufferCollection& into)
 {
   TimerProcess.Start();
   const int frame = in[0]->GetCount();
@@ -285,6 +285,8 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
       TSampleBuffer inr(in[1]->Slice(i, i+subframe));
       TSampleBuffer outl(out[0]->Slice(i, i+subframe));
       TSampleBuffer outr(out[1]->Slice(i, i+subframe));
+      TSampleBuffer into1(into[0]->Slice(i, i+subframe));
+      TSampleBuffer into2(into[1]->Slice(i, i+subframe));
 
       // Render oscillators to 0 and pan to 2 & 3.
       // Hard sync is propagated from one oscillator to the next.
@@ -294,6 +296,7 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
       for (int i = 0; i < TGlobal::Oscillators; i++) {
 	buf[0].Clear();
 	v->Oscillators[i]->Process(inl, buf[0], hardsync, hardsync);
+	into1.AddSamples(buf[0]); // All oscillators mixed together
 	v->OscPan[i].Process(buf[0], buf[2], buf[3]);
       }
 
@@ -315,11 +318,15 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
       // Need to step amp envelope on each sample, or at least
       // interpolate it, to avoid sudden steps for short envs.
       // FIXME!
+      // Oh, and shouldn't the amp envelope be applied before filter, distortion,
+      // etc? That would make for a more dynamic sound, and it would be saner.
       for (int j=0; j<subframe; j++) {
 	v->AmpEg.Step(1);
 	outl[j] += buf[0][j] * v->Velocity/128.0 * v->AmpEg.GetValue();
 	outr[j] += buf[1][j] * v->Velocity/128.0 * v->AmpEg.GetValue();
       }
+
+      into2.AddSamples(outl); // Left channel before effects
     }
     TimerSamples.Stop();
   }

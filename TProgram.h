@@ -83,7 +83,7 @@ public:
 
   TProgram();
   ~TProgram();
-  void Process(TSampleBufferCollection& in, TSampleBufferCollection& out);
+  void Process(TSampleBufferCollection& in, TSampleBufferCollection& out, TSampleBufferCollection& into);
 
   void SetupConstantModulations();
   void Patch0();
