@@ -182,25 +182,32 @@ void runInJack()
   jack_client_close(Client);
 }
 
+static void printHelp()
+{
+  std::cout << "Usage: jacksynth [<args...>]" << std::endl
+      << " Where allowed arguments are:" << std::endl
+      << "   -t, --testsignal <N>   Generate testsignal number N, to stdout" << std::endl
+      << "   -h, --help             Print this help text" << std::endl
+      << std::endl;
+}
+
 int main(int argc, char* argv[])
 {
   int testsignal = 0;
 
   struct option longopts[] = {{ "testsignal", 1, 0, 't' },
-                              { "help", 0, 0, 'h'},
+                              { "help", no_argument, 0, 'h'},
                               { 0, 0, 0, 0}};
   int opt;
   while ((opt = getopt_long(argc, argv, "h", longopts, 0)) != -1) {
     switch (opt) {
-    case 'h':
-      std::cerr << "Help!" << std::endl;
-      break;
     case 't':
       testsignal = atoi(optarg);
       break;
     default:
-      std::cerr << "Bah!" << std::endl;
-      return 1;
+    case 'h':
+      printHelp();
+      return 0;
     }
   }
 
