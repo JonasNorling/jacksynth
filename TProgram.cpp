@@ -347,6 +347,8 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
       TSampleBuffer outr(out[1]->Slice(i, i+subframe));
       TSampleBuffer into1(into[0]->Slice(i, i+subframe));
       TSampleBuffer into2(into[1]->Slice(i, i+subframe));
+      TSampleBuffer into3(into[2]->Slice(i, i+subframe));
+      TSampleBuffer into4(into[3]->Slice(i, i+subframe));
 
       // Render oscillators to 0 and pan to 2 & 3.
       // Hard sync is propagated from one oscillator to the next.
@@ -356,8 +358,9 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
       for (int i = 0; i < TGlobal::Oscillators; i++) {
 	buf[0].Clear();
 	v->Oscillators[i]->Process(inl, buf[0], hardsync, hardsync);
-	into1.AddSamples(buf[0]); // All oscillators mixed together
 	v->OscPan[i].Process(buf[0], buf[2], buf[3]);
+	into1.AddSamples(buf[2]); // All oscillators going to filter 1
+	into2.AddSamples(buf[3]); // All oscillators going to filter 2
       }
 
       // Add distortion in 2 & 3
@@ -367,6 +370,9 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
       // render filters in 2 & 3
       v->Filters[0].Process(buf[2], buf[2]);
       v->Filters[1].Process(buf[3], buf[3]);
+
+      into3.AddSamples(buf[2]); // All oscillators filter 1 output
+      into4.AddSamples(buf[3]); // All oscillators filter 2 output
 
       // pan filters to 0 & 1
       buf[0].Clear();
@@ -385,8 +391,6 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
 	outl[j] += buf[0][j] * v->Velocity/128.0 * v->AmpEg.GetValue();
 	outr[j] += buf[1][j] * v->Velocity/128.0 * v->AmpEg.GetValue();
       }
-
-      into2.AddSamples(outl); // Left channel before effects
     }
     TimerSamples.Stop();
   }
@@ -525,7 +529,8 @@ void TProgram::NoteOff(TUnsigned7 note, TUnsigned7 velocity)
 
 void TProgram::SetController(TUnsigned7 cc, TUnsigned7 value)
 {
-  //printf("cc 0x%x=%d\n", cc, value);
+  //printf("CC 0x%x (%d) = %d\n", cc, cc, value);
+
   switch (cc) {
   case 1: // Modwheel
     ModWheel = value/128.0;

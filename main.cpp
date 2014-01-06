@@ -152,8 +152,10 @@ void runInJack()
   TJackAudioPort inputPortR("rightin", Client, TJackAudioPort::INPUT);
   TJackAudioPort outputPortL("left", Client, TJackAudioPort::OUTPUT);
   TJackAudioPort outputPortR("right", Client, TJackAudioPort::OUTPUT);
-  TJackAudioPort intermediateOutPort1("int1", Client, TJackAudioPort::OUTPUT);
-  TJackAudioPort intermediateOutPort2("int2", Client, TJackAudioPort::OUTPUT);
+  TJackAudioPort intOutPort1("int1", Client, TJackAudioPort::OUTPUT);
+  TJackAudioPort intOutPort2("int2", Client, TJackAudioPort::OUTPUT);
+  TJackAudioPort intOutPort3("int3", Client, TJackAudioPort::OUTPUT);
+  TJackAudioPort intOutPort4("int4", Client, TJackAudioPort::OUTPUT);
 
   MidiIn = jack_port_register(Client, "MIDI-IN",
 			      JACK_DEFAULT_MIDI_TYPE,
@@ -168,7 +170,7 @@ void runInJack()
 
   TAudioPortCollection inputPorts({&inputPortL, &inputPortR});
   TAudioPortCollection outputPorts({&outputPortL, &outputPortR});
-  TAudioPortCollection intermediateOutPorts({&intermediateOutPort1, &intermediateOutPort2});
+  TAudioPortCollection intermediateOutPorts({&intOutPort1, &intOutPort2, &intOutPort3, &intOutPort4});
   TJackSynth synth(inputPorts, outputPorts, intermediateOutPorts);
   synth.SetMidiSendCallback(send_midi);
 
@@ -219,7 +221,9 @@ int main(int argc, char* argv[])
     TFileAudioPort outputPortR("/dev/null", TFileAudioPort::OUTPUT);
     TFileAudioPort intOutPort1("/dev/null", TFileAudioPort::OUTPUT);
     TFileAudioPort intOutPort2("/dev/null", TFileAudioPort::OUTPUT);
-    TAudioPortCollection intOutPorts({&intOutPort1, &intOutPort2});
+    TFileAudioPort intOutPort3("/dev/null", TFileAudioPort::OUTPUT);
+    TFileAudioPort intOutPort4("/dev/null", TFileAudioPort::OUTPUT);
+    TAudioPortCollection intOutPorts({&intOutPort1, &intOutPort2, &intOutPort3, &intOutPort4});
     TAudioPortCollection outputPorts({&outputPortL, &outputPortR});
 
     TGlobal::SampleRate = 44100;

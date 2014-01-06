@@ -7,7 +7,7 @@ TJackSynth::TJackSynth(TAudioPortCollection& inputPorts,
 		       TAudioPortCollection& intermediateOutPorts)
   : InputPorts(inputPorts),
     OutputPorts(outputPorts),
-    IntermediateOutPorts(intermediateOutPorts),
+    IntOutPorts(intermediateOutPorts),
     Program(),
     SendMidi(0)
 {
@@ -89,23 +89,28 @@ int TJackSynth::Process(jack_nframes_t nframes)
 {
   TSampleBuffer in[2] = { InputPorts[0]->GetBuffer(nframes), InputPorts[1]->GetBuffer(nframes) };
   TSampleBuffer out[2] = { OutputPorts[0]->GetBuffer(nframes), OutputPorts[1]->GetBuffer(nframes) };
-  TSampleBuffer into[2] = { IntermediateOutPorts[0]->GetBuffer(nframes), IntermediateOutPorts[1]->GetBuffer(nframes) };
+  TSampleBuffer into[4] = { IntOutPorts[0]->GetBuffer(nframes), IntOutPorts[1]->GetBuffer(nframes),
+      IntOutPorts[2]->GetBuffer(nframes), IntOutPorts[3]->GetBuffer(nframes)};
 
   TSampleBufferCollection ins({&in[0], &in[1]});
   TSampleBufferCollection outs({&out[0], &out[1]});
-  TSampleBufferCollection ints({&into[0], &into[1]});
+  TSampleBufferCollection ints({&into[0], &into[1], &into[2], &into[3]});
 
   out[0].Clear();
   out[1].Clear();
   into[0].Clear();
   into[1].Clear();
+  into[2].Clear();
+  into[3].Clear();
 
   Program.Process(ins, outs, ints);
 
   OutputPorts[0]->Commit();
   OutputPorts[1]->Commit();
-  IntermediateOutPorts[0]->Commit();
-  IntermediateOutPorts[1]->Commit();
+  IntOutPorts[0]->Commit();
+  IntOutPorts[1]->Commit();
+  IntOutPorts[2]->Commit();
+  IntOutPorts[3]->Commit();
 
   return 0;
 }

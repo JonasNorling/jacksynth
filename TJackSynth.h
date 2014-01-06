@@ -26,7 +26,7 @@ public:
 private:
   TAudioPortCollection& InputPorts;
   TAudioPortCollection& OutputPorts;
-  TAudioPortCollection& IntermediateOutPorts;
+  TAudioPortCollection& IntOutPorts;
 
   // Just one program for now, we should go multi-timbral in the future
   TProgram Program;
