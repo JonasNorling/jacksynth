@@ -606,13 +606,6 @@ void TProgram::SetController(TUnsigned7 cc, TUnsigned7 value)
     /* We use the same CC numbers as Waldorf gear at the moment,
        making my setup a bit simpler. */
 
-    // Map 0..127 to 1..17696 Hz
-#define VAL2HZ_HI(n) exp2f(n/9.0f)
-    // Map 0..127 to 0.19..1261 Hz
-#define VAL2HZ_LO(n) exp2f((n-24)/12.0f)
-    // Map 0..127 to 0.35..21247 ms
-#define VAL2MS(n) exp2f((n-12)/8.0f)
-
   case 16: // LFO1 speed
     SetParameter(0, PARAM_LFO_FREQUENCY_FRACHZ, VAL2HZ_LO(value)*128, true); break;
   case 20: // LFO2 speed
@@ -722,6 +715,18 @@ void TProgram::SetParameter(int unit, TParameter param, int value, bool echo)
     OscLevel[unit] = fractvalue;
   } else if (param == PARAM_OSC_TYPE) {
     OscType[unit] = static_cast<TOscType>(value);
+  } else if (param == PARAM_OSC_DETUNE) {
+    switch (unit) {
+    case 0: Modulations[C_OSC1_DETUNE].Amount = cents(value); break;
+    case 1: Modulations[C_OSC2_DETUNE].Amount = cents(value); break;
+    case 2: Modulations[C_OSC3_DETUNE].Amount = cents(value); break;
+    }
+  } else if (param == PARAM_OSC_OCTAVE) {
+    switch (unit) {
+    case 0: Modulations[C_OSC1_OCTAVE].Amount = semitones(value); break;
+    case 1: Modulations[C_OSC2_OCTAVE].Amount = semitones(value); break;
+    case 2: Modulations[C_OSC3_OCTAVE].Amount = semitones(value); break;
+    }
   } else if ((param & 0xe0) == 0x20) {
     int n = 0;
     for (TModulation& m: Modulations) {

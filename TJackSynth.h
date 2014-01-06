@@ -33,4 +33,6 @@ private:
 
   void ParameterChangedCallback(int unit, int param, int value);
   std::function<void(const std::vector<uint8_t>&)> SendMidi;
+
+  void HandleWaldorfSysex(std::vector<uint8_t> data);
 };

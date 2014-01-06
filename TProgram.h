@@ -110,7 +110,7 @@ private:
   };
 
   enum TConstantModulations {
-    C_OSC1_PAN,
+    C_OSC1_PAN = 0,
     C_OSC1_DETUNE,
     C_OSC1_OCTAVE,
     C_OSC1_PB,

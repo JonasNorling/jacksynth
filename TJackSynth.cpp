@@ -45,6 +45,8 @@ void TJackSynth::HandleMidi(std::vector<uint8_t> data)
     int unit = data[3];
     int value = short((data[4] << 9) | (data[5] << 2)) >> 2;
     Program.SetParameter(unit, static_cast<TParameter>(param), value);
+  } else if (data[0] == 0xf0 && data[1] == 0x3e) {
+    HandleWaldorfSysex(data);
   } else if (data[0] == 0xf0 && data[1] == 0x7e) {
     Program.DumpParameters();
   } else if ((data[0] & 0xf0) == 0xc0) {
@@ -66,6 +68,75 @@ void TJackSynth::HandleMidi(std::vector<uint8_t> data)
     }
   } else {
     //printf("MIDI: %02x %02x %02x %02x\n", data[0], data[1], data[2], data[3]);
+  }
+}
+
+static TOscType blofeldOscType(uint8_t v)
+{
+  switch (v) {
+  case 0: return OSC_OFF;
+  case 1: return OSC_SQUARE;
+  case 2: return OSC_SAW;
+  case 3: return OSC_OFF; // Triangle
+  case 4: return OSC_SINE;
+  default: return OSC_WT;
+  }
+}
+void TJackSynth::HandleWaldorfSysex(std::vector<uint8_t> data)
+{
+  if (data.size() < 10) {
+    return;
+  }
+
+  uint8_t idm = data[4];
+  if (idm == 0x20) {
+    // Parameter change
+    uint16_t n = data[6] << 7 | data[7];
+    uint8_t v = data[8];
+
+    printf("Waldorf sysex %d = %d\n", n, v);
+
+    TFraction fractvalue = v / 128.0f;
+    int signedvalue = v - 64;
+    TFraction signedfractvalue = signedvalue / 64.0f;
+
+    // Mapping from blofeld_sysex_v1_04.txt
+    switch (n) {
+    case   1: Program.SetParameter(0, PARAM_OSC_OCTAVE, signedvalue, true); break;
+    case   3: Program.SetParameter(0, PARAM_OSC_DETUNE, 100*signedfractvalue, true); break;
+    case   8: Program.SetParameter(0, PARAM_OSC_TYPE, blofeldOscType(v), true); break;
+    case   9: Program.SetParameter(0, PARAM_PULSE_WIDTH, v, true); break;
+    case  17: Program.SetParameter(1, PARAM_OSC_OCTAVE, signedvalue, true); break;
+    case  19: Program.SetParameter(1, PARAM_OSC_DETUNE, 100*signedfractvalue, true); break;
+    case  24: Program.SetParameter(1, PARAM_OSC_TYPE, blofeldOscType(v), true); break;
+    case  25: Program.SetParameter(1, PARAM_PULSE_WIDTH, v, true); break;
+    case  33: Program.SetParameter(2, PARAM_OSC_OCTAVE, signedvalue, true); break;
+    case  35: Program.SetParameter(2, PARAM_OSC_DETUNE, 100*signedfractvalue, true); break;
+    case  40: Program.SetParameter(2, PARAM_OSC_TYPE, blofeldOscType(v), true); break;
+    case  41: Program.SetParameter(2, PARAM_PULSE_WIDTH, v, true); break;
+    case  61: Program.SetParameter(0, PARAM_OSC_LEVEL, v, true); break;
+    case  63: Program.SetParameter(1, PARAM_OSC_LEVEL, v, true); break;
+    case  65: Program.SetParameter(2, PARAM_OSC_LEVEL, v, true); break;
+
+    case  78: Program.SetParameter(0, PARAM_FILTER_CUTOFF_HZ, VAL2HZ_HI(v), true); break;
+    case  80: Program.SetParameter(0, PARAM_FILTER_RESONANCE, v, true); break;
+    case  81: Program.SetParameter(0, PARAM_DISTORTION, v, true); break;
+    case  98: Program.SetParameter(1, PARAM_FILTER_CUTOFF_HZ, VAL2HZ_HI(v), true); break;
+    case 100: Program.SetParameter(1, PARAM_FILTER_RESONANCE, v, true); break;
+    case 101: Program.SetParameter(1, PARAM_DISTORTION, v, true); break;
+    case 161: Program.SetParameter(0, PARAM_LFO_FREQUENCY_FRACHZ, VAL2HZ_LO(v)*128, true); break;
+    case 173: Program.SetParameter(1, PARAM_LFO_FREQUENCY_FRACHZ, VAL2HZ_LO(v)*128, true); break;
+
+    case 199: Program.SetParameter(0x10, PARAM_ENVELOPE, VAL2MS(v), true); break;
+    case 201: Program.SetParameter(0x11, PARAM_ENVELOPE, VAL2MS(v), true); break;
+    case 202: Program.SetParameter(0x12, PARAM_ENVELOPE, v, true); break;
+    case 205: Program.SetParameter(0x13, PARAM_ENVELOPE, VAL2MS(v), true); break;
+
+    case 211: Program.SetParameter(0x00, PARAM_ENVELOPE, VAL2MS(v), true); break;
+    case 213: Program.SetParameter(0x01, PARAM_ENVELOPE, VAL2MS(v), true); break;
+    case 214: Program.SetParameter(0x02, PARAM_ENVELOPE, v, true); break;
+    case 217: Program.SetParameter(0x03, PARAM_ENVELOPE, VAL2MS(v), true); break;
+    }
   }
 }
 

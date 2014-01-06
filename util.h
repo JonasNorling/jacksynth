@@ -18,11 +18,20 @@ typedef float TFrequency;   // in Hz
 typedef float TTime;        // in ms
 
 static inline float octaves(float x) { return x; }
-static inline float semitones(float x) { return x/12; }
-static inline float cents(float x) { return x/1200; }
+static inline float semitones(float x) { return x/12.0f; }
+static inline float cents(float x) { return x/1200.0f; }
 static inline int ms_to_samples(int x) { return (TGlobal::SampleRate * x) / 1000; }
 static inline uint8_t hi7(int v) { return (v >> 7) & 0x7f; }
 static inline uint8_t lo7(int v) { return v & 0x7f; }
+
+// Map 0..127 to 1..17696 Hz
+//#define VAL2HZ_HI(n) exp2f(n/9.0f)
+// Map 0..127 to 12..17955 Hz, same scale as Blofeld
+#define VAL2HZ_HI(n) (12*exp10f(n/40.0f))
+// Map 0..127 to 0.19..1261 Hz
+#define VAL2HZ_LO(n) exp2f((n-24)/12.0f)
+// Map 0..127 to 0.35..21247 ms
+#define VAL2MS(n) exp2f((n-12)/8.0f)
 
 class TTimer
 {

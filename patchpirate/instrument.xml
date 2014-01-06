@@ -94,27 +94,29 @@
 	<p b="0:1" n="0x0413" label="Release [ms]" range="0:8000"/>
       </g>
       <g label="Modulations">
-	<g b="0x2000" label="Modulation 0" data-struct="modulation"/>
-	<g b="0x2100" label="Modulation 1" data-struct="modulation"/>
-	<g b="0x2200" label="Modulation 2" data-struct="modulation"/>
-	<g b="0x2300" label="Modulation 3" data-struct="modulation"/>
-	<g b="0x2400" label="Modulation 4" data-struct="modulation"/>
+	<g b="0x2000" label="C_OSC1_PAN" data-struct="modulation"/>
+	<g b="0x2100" label="C_OSC1_DETUNE" data-struct="modulation"/>
+	<g b="0x2200" label="C_OSC1_OCTAVE" data-struct="modulation"/>
+	<g b="0x2300" label="C_OSC1_PB" data-struct="modulation"/>
+	  </g>
+      <g label="Modulations">
+	<g b="0x2400" label="C_OSC2_PAN" data-struct="modulation"/>
+	<g b="0x2500" label="C_OSC2_DETUNE" data-struct="modulation"/>
+	<g b="0x2600" label="C_OSC2_OCTAVE" data-struct="modulation"/>
+	<g b="0x2700" label="C_OSC2_PB" data-struct="modulation"/>
       </g>
       <g label="Modulations">
-	<g b="0x2500" label="Modulation 5" data-struct="modulation"/>
-	<g b="0x2600" label="Modulation 6" data-struct="modulation"/>
-	<g b="0x2700" label="Modulation 7" data-struct="modulation"/>
-	<g b="0x2800" label="Modulation 8" data-struct="modulation"/>
-	<g b="0x2900" label="Modulation 9" data-struct="modulation"/>
+	<g b="0x2800" label="C_OSC3_PAN" data-struct="modulation"/>
+	<g b="0x2900" label="C_OSC3_DETUNE" data-struct="modulation"/>
+	<g b="0x2a00" label="C_OSC3_OCTAVE" data-struct="modulation"/>
+	<g b="0x2b00" label="C_OSC3_PB" data-struct="modulation"/>
       </g>
       <g label="Modulations">
-	<g b="0x2a00" label="Modulation A" data-struct="modulation"/>
-	<g b="0x2b00" label="Modulation B" data-struct="modulation"/>
-	<g b="0x2c00" label="Modulation C" data-struct="modulation"/>
-	<g b="0x2d00" label="Modulation D" data-struct="modulation"/>
+	<g b="0x2c00" label="C_F1_PAN" data-struct="modulation"/>
+	<g b="0x2d00" label="C_F2_PAN" data-struct="modulation"/>
+      </g>
+      <g label="Modulations">
 	<g b="0x2e00" label="Modulation E" data-struct="modulation"/>
-      </g>
-      <g label="Modulations">
 	<g b="0x2f00" label="Modulation F" data-struct="modulation"/>
 	<g b="0x3000" label="Modulation G" data-struct="modulation"/>
 	<g b="0x3100" label="Modulation H" data-struct="modulation"/>
