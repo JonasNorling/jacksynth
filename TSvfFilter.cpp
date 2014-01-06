@@ -28,11 +28,13 @@ void TSvfFilter::Crunch(const TCoeffs coeffs, TSample* state,
 			const TSample& ins,
 			TSample& lp, TSample& hp, TSample& bp)
 {
+  const float clamping = 5.0f;
+
   lp = state[0] * coeffs.f + state[1];
-  state[1] = lp;
+  state[1] = clamp(lp, -clamping, clamping);
   hp = ins - lp - coeffs.q * state[0];
   bp = hp * coeffs.f + state[0];
-  state[0] = bp;
+  state[0] = clamp(bp, -clamping, clamping);
 }
 
 void TSvfFilter::Process(TSampleBuffer& in, TSampleBuffer& out)
