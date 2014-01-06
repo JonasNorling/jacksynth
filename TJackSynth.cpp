@@ -59,6 +59,8 @@ void TJackSynth::HandleMidi(std::vector<uint8_t> data)
 	Program.Patch2();
       } else if (data[1] == 0x03) {
         Program.Patch3();
+      } else if (data[1] == 0x04) {
+        Program.Patch4();
       }
       Program.DumpParameters();
     }

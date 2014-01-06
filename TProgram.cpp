@@ -18,6 +18,7 @@ TProgram::TProgram() :
   TimerSamples("Samples"),
   PitchBend(0),
   ModWheel(0),
+  Breath(0),
   Sustain(0),
   SampleLoader("sample.ogg"),
   Modulations()
@@ -74,11 +75,6 @@ void TProgram::Patch0()
   OscLevel[0] = 0.0;
   OscLevel[1] = 1.0;
   OscLevel[2] = 0.0;
-
-  // Enable hard-sync
-  //OscSync[1] = true;
-  //Modulations[C_OSC2_DETUNE].Amount = semitones(17);
-  //Modulations.push_back({ TModulation::LFO1, semitones(15), TModulation::OSC2_FREQ });
 
   WaveShaper[0] = 0.0;
   WaveShaper[1] = 0.0;
@@ -247,6 +243,10 @@ void TProgram::Patch3()
   OscLevel[1] = 1.0f;
   OscLevel[2] = 1.0f;
 
+  Modulations.push_back({ TModulation::BREATH, octaves(-1), TModulation::OSC1_FREQ });
+  Modulations.push_back({ TModulation::BREATH, octaves(-1), TModulation::OSC2_FREQ });
+  Modulations.push_back({ TModulation::BREATH, octaves(-1), TModulation::OSC3_FREQ });
+
   Modulations[C_F1_PAN].Amount = -1;
   Modulations[C_F2_PAN].Amount = 1;
 
@@ -259,6 +259,9 @@ void TProgram::Patch3()
   Modulations.push_back({ TModulation::EG1_TIMES_VELO, octaves(8), TModulation::F1_CUTOFF });
   Modulations.push_back({ TModulation::EG1_TIMES_VELO, octaves(8), TModulation::F2_CUTOFF });
 
+  Modulations.push_back({ TModulation::MODWHEEL, octaves(6), TModulation::F1_CUTOFF });
+  Modulations.push_back({ TModulation::MODWHEEL, octaves(6), TModulation::F2_CUTOFF });
+
   WaveShaper[0] = 0.0;
   WaveShaper[1] = 0.0;
   LfoFrequency[0] = 1;
@@ -270,6 +273,50 @@ void TProgram::Patch3()
   fx->SetDelay(250);
   fx->SetFeedback(0.5);
   Effects[0].reset(fx);
+}
+
+/*
+ * Hardsync test patch
+ */
+void TProgram::Patch4()
+{
+  Modulations.clear();
+  SetupConstantModulations();
+
+  OscType[0] = OSC_SAW;
+  OscType[1] = OSC_SAW;
+  OscType[2] = OSC_OFF;
+
+  OscPw[0] = 0;
+  OscPw[1] = 0;
+  OscPw[2] = 0;
+
+  OscSync[0] = false;
+  OscSync[1] = false;
+  OscSync[2] = false;
+
+  OscLevel[0] = 0.0;
+  OscLevel[1] = 1.0;
+  OscLevel[2] = 0.0;
+
+  // Enable hard-sync
+  OscSync[1] = true;
+  Modulations[C_OSC2_DETUNE].Amount = octaves(1);
+  Modulations.push_back({ TModulation::MODWHEEL, octaves(1), TModulation::OSC2_FREQ });
+  Modulations.push_back({ TModulation::BREATH, octaves(-1), TModulation::OSC2_FREQ });
+
+  WaveShaper[0] = 0.0;
+  WaveShaper[1] = 0.0;
+  LfoFrequency[0] = 1;
+  LfoFrequency[1] = 1;
+  FilterCutoff[0] = 10000;
+  FilterCutoff[1] = 10000;
+  FilterResonance[0] = 0.15;
+  FilterResonance[1] = 0.15;
+  Envelope[0] = {Attack: 20, Decay: 0, Sustain: 1.0, Release: 20};
+  Envelope[1] = {Attack: 20, Decay: 0, Sustain: 1.0, Release: 20};
+
+  Effects[0].reset();
 }
 
 void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out, TSampleBufferCollection& into)
@@ -454,6 +501,7 @@ inline float TProgram::ModulationValue(TModulation::TDestination d, const TSound
       case TModulation::VELOCITY: mod += m.Amount * voice.voice->Velocity/128.0; break;
       case TModulation::EG1_TIMES_VELO: mod += m.Amount * voice.voice->FiltEg.GetValue() * voice.voice->Velocity/128.0f; break;
       case TModulation::MODWHEEL: mod += m.Amount * ModWheel; break;
+      case TModulation::BREATH: mod += m.Amount * Breath; break;
       }
     }
   }
@@ -532,8 +580,11 @@ void TProgram::SetController(TUnsigned7 cc, TUnsigned7 value)
   //printf("CC 0x%x (%d) = %d\n", cc, cc, value);
 
   switch (cc) {
-  case 1: // Modwheel
+  case 1: // Modwheel (Joystick +Y)
     ModWheel = value/128.0;
+    break;
+  case 2: // Breath (Joystick -Y)
+    Breath = value/128.0;
     break;
   case 64: // Sustain pedal
     Sustain = value;
@@ -567,7 +618,8 @@ void TProgram::SetController(TUnsigned7 cc, TUnsigned7 value)
   case 20: // LFO2 speed
     SetParameter(1, PARAM_LFO_FREQUENCY_FRACHZ, VAL2HZ_LO(value)*128, true); break;
   case 24: // LFO3 speed
-    SetParameter(2, PARAM_LFO_FREQUENCY_FRACHZ, VAL2HZ_LO(value)*128, true); break;
+    //SetParameter(2, PARAM_LFO_FREQUENCY_FRACHZ, VAL2HZ_LO(value)*128, true);
+    break;
 
   case 27: // OSC1 octave
     SetParameter(0, PARAM_OSC_OCTAVE, value, true); break;

@@ -21,7 +21,8 @@ public:
     EG1,       // 0..1
     VELOCITY,  // 0..1
     EG1_TIMES_VELO, // 0..1
-    MODWHEEL   // 0..1
+    MODWHEEL,  // 0..1 (Joystick +Y)
+    BREATH,    // 0..1 (Joystick -Y)
   } Source;
   float Amount; // in octaves (typically -1..1)
   enum TDestination {
@@ -91,6 +92,7 @@ public:
   void Patch1();
   void Patch2();
   void Patch3();
+  void Patch4();
 
   void NoteOn(TUnsigned7 note, TUnsigned7 velocity);
   void NoteOff(TUnsigned7 note, TUnsigned7 velocity);
@@ -149,6 +151,7 @@ private:
   // Active modulations
   float PitchBend;
   float ModWheel;
+  float Breath;
   TUnsigned7 Sustain;
 
   TSampleLoader SampleLoader;
