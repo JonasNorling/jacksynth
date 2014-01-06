@@ -2,9 +2,9 @@
 #include "TGlobal.h"
 
 TMinBlepSawOscillator::TMinBlepSawOscillator() :
-  Hz(0), Sync(false), Scanpos(0.99999999), BufferPos(0), Target(0)
+  Hz(0), Sync(false), Scanpos(0.5), BufferPos(0), Target(0)
 {
-  std::fill(Buffer, Buffer+BufferLen, 0);
+  std::fill(Buffer, Buffer+BufferLen, 1.0f);
 }
 
 /*
@@ -55,7 +55,7 @@ void TMinBlepSawOscillator::Process(TSampleBuffer& in, TSampleBuffer& out, TSamp
     TSample offsetCorrection = (minblep::integral - minblep::length) * pace;
 
     out[sn] += A * (0.5 + Scanpos - Buffer[BufferPos % BufferLen] + offsetCorrection);
-    Buffer[BufferPos % BufferLen] = 1;
+    Buffer[BufferPos % BufferLen] = 1.0f;
     BufferPos++;
   }
 }
