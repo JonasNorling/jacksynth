@@ -156,6 +156,9 @@ void TProgram::Patch1()
     Effects[0].reset(new TDelayFx());
 }
 
+/*
+ * Samples
+ */
 void TProgram::Patch2()
 {
     Modulations.clear();
@@ -172,36 +175,52 @@ void TProgram::Patch2()
     OscSync[2] = false;
 
     OscLevel[0] = 1.0;
-    OscLevel[1] = 1.0;
-    OscLevel[2] = 1.0;
+    OscLevel[1] = 0.6;
+    OscLevel[2] = 1.0/8;
 
     WaveShaper[0] = 0.0;
     WaveShaper[1] = 0.0;
 
     Modulations[C_OSC1_DETUNE].Amount = cents(10);
     Modulations[C_OSC2_DETUNE].Amount = cents(-10);
-    Modulations[C_OSC1_PAN].Amount = 1;
-    Modulations[C_OSC2_PAN].Amount = -1;
+    Modulations[C_OSC1_OCTAVE].Amount = octaves(1);
+    Modulations[C_OSC2_OCTAVE].Amount = octaves(0);
+    Modulations[C_OSC3_OCTAVE].Amount = octaves(2);
+    Modulations[C_OSC1_PAN].Amount = 0; // Modulated by LFO
+    Modulations[C_OSC2_PAN].Amount = 0; // Modulated by LFO
+    Modulations[C_OSC3_PAN].Amount = 0;
     Modulations[C_F1_PAN].Amount = 1;
     Modulations[C_F2_PAN].Amount = -1;
 
-    Modulations.push_back( { TModulation::KEY, -2, TModulation::OSC3_LEVEL });
+    Modulations.push_back( { TModulation::KEY, -2, TModulation::OSC2_LEVEL });
 
     Envelope[0] = {Attack: 3, Decay: 400, Sustain: 0.3, Release: 150};
     Envelope[1] = {Attack: 300, Decay: 0, Sustain: 1.0, Release: 300};
 
     FilterCutoff[0] = 6 * TGlobal::HzE3;
-    FilterCutoff[1] = 6 * TGlobal::HzE3;
+    FilterCutoff[1] = 5 * TGlobal::HzE3;
     FilterResonance[0] = 0.15;
-    FilterResonance[1] = 0.15;
+    FilterResonance[1] = 0.20;
     Modulations.push_back( { TModulation::KEY, semitones(6), TModulation::F1_CUTOFF });
     Modulations.push_back( { TModulation::KEY, semitones(6), TModulation::F2_CUTOFF });
     Modulations.push_back( { TModulation::EG1, -octaves(2), TModulation::F1_CUTOFF });
     Modulations.push_back( { TModulation::EG1, -octaves(2), TModulation::F2_CUTOFF });
 
-    LfoFrequency[0] = 0.5;
+    Modulations.push_back( { TModulation::MODWHEEL, -2.0, TModulation::OSC1_LEVEL });
+    Modulations.push_back( { TModulation::MODWHEEL, -2.0, TModulation::OSC2_LEVEL });
+    Modulations.push_back( { TModulation::MODWHEEL, 4.0, TModulation::OSC3_LEVEL });
+
+    Modulations.push_back( { TModulation::BREATH, octaves(-2), TModulation::OSC1_FREQ });
+    Modulations.push_back( { TModulation::BREATH, octaves(-2), TModulation::OSC2_FREQ });
+    Modulations.push_back( { TModulation::BREATH, octaves(-2), TModulation::OSC3_FREQ });
+
+    LfoFrequency[0] = 1.3;
     Modulations.push_back( { TModulation::LFO1, cents(10), TModulation::OSC1_FREQ });
     Modulations.push_back( { TModulation::LFO1, cents(-10), TModulation::OSC2_FREQ });
+
+    LfoFrequency[1] = 0.5;
+    Modulations.push_back( { TModulation::LFO2, 0.4, TModulation::OSC1_PAN });
+    Modulations.push_back( { TModulation::LFO2, -0.4, TModulation::OSC2_PAN });
 
     Effects[0].reset();
 }
