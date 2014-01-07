@@ -27,8 +27,9 @@
 #include "TGlobal.h"
 
 TMinBlepPulseOscillator::TMinBlepPulseOscillator()
-        : Hz(0), Scanpos(0.99999999), BufferPos(0), Target(0), Pw(0), NextPw(0)
+        : TBaseOscillator(), BufferPos(0), Target(0), Pw(0), NextPw(0)
 {
+    PhaseAccumulator = 0.99999999;
     std::fill(Buffer, Buffer + BufferLen, 0);
 }
 
@@ -41,26 +42,26 @@ void TMinBlepPulseOscillator::Process(TSampleBuffer& in, TSampleBuffer& out,
         assert(pace > 0);
         if (pace > 0.99) pace = 0.99;
 
-        double lastpos = Scanpos;
-        Scanpos += pace;
-        if (Scanpos >= 1) {
-            Scanpos -= 1;
+        double lastpos = PhaseAccumulator;
+        PhaseAccumulator += pace;
+        if (PhaseAccumulator >= 1) {
+            PhaseAccumulator -= 1;
             Pw = NextPw;
         }
         const float pw = 0.5 + 0.5 * Pw;
-        assert(Scanpos >= 0);
-        assert(Scanpos <= 1);
+        assert(PhaseAccumulator >= 0);
+        assert(PhaseAccumulator <= 1);
 
         // If Scanpos just went past 0, we need to place a positive
         // edge. If it just went past pw, we need to place a negative
         // edge. The step is constructed from minblep::length samples
         // chosen from minblep::table.
 
-        if ((lastpos < pw && Scanpos >= pw)
-                || (lastpos < pw && lastpos > Scanpos)) {
-            int offset = (Scanpos - pw) / pace * minblep::overSampling;
-            if (Scanpos < pw) {
-                offset = ((1 + Scanpos) - pw) / pace * minblep::overSampling;
+        if ((lastpos < pw && PhaseAccumulator >= pw)
+                || (lastpos < pw && lastpos > PhaseAccumulator)) {
+            int offset = (PhaseAccumulator - pw) / pace * minblep::overSampling;
+            if (PhaseAccumulator < pw) {
+                offset = ((1 + PhaseAccumulator) - pw) / pace * minblep::overSampling;
             }
             for (int i = 0; i < BufferLen; i++) {
                 Buffer[(BufferPos + i) % BufferLen] -= minblep::table[i
@@ -68,8 +69,8 @@ void TMinBlepPulseOscillator::Process(TSampleBuffer& in, TSampleBuffer& out,
             }
             Target = 0;
         }
-        if (lastpos > Scanpos) {
-            const int offset = Scanpos / pace * minblep::overSampling;
+        if (lastpos > PhaseAccumulator) {
+            const int offset = PhaseAccumulator / pace * minblep::overSampling;
             for (int i = 0; i < BufferLen; i++) {
                 Buffer[(BufferPos + i) % BufferLen] += minblep::table[i
                         * minblep::overSampling + offset];

@@ -5,13 +5,13 @@ void TSampleOscillator::Process(TSampleBuffer& in, TSampleBuffer& out, TSampleBu
 {
     if (Sample) {
         for (TSample& outs : out) {
-            if (LoopPoint2 >= -1 && Scanpos > LoopPoint2 && State <= TEnvelope::SUSTAIN ) {
-                Scanpos = LoopPoint1 + Scanpos - LoopPoint2;
+            if (LoopPoint2 >= -1 && PhaseAccumulator > LoopPoint2 && State <= TEnvelope::SUSTAIN ) {
+                PhaseAccumulator = LoopPoint1 + PhaseAccumulator - LoopPoint2;
             }
-            if (Scanpos <= Sample->GetCount()) {
-                outs = (*Sample)[int(Scanpos)] * 4 * TGlobal::OscAmplitude;
+            if (PhaseAccumulator <= Sample->GetCount()) {
+                outs = (*Sample)[int(PhaseAccumulator)] * 4 * TGlobal::OscAmplitude;
             }
-            Scanpos += Hz / Scanspeed;
+            PhaseAccumulator += Hz / Scanspeed;
         }
     }
     syncout.Clear();

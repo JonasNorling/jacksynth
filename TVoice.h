@@ -1,7 +1,7 @@
 /* -*- mode: c++ -*- */
 #pragma once
 
-#include "IOscillator.h"
+#include "TBaseOscillator.h"
 #include "TButterworthLpFilter.h"
 #include "TResonantLpFilter.h"
 #include "TSvfFilter.h"
@@ -38,7 +38,7 @@ public:
     TUnsigned7 Velocity;
     bool DeleteMe; //< Voice has finished playing
 
-    std::unique_ptr<IOscillator> Oscillators[TGlobal::Oscillators];
+    std::unique_ptr<TBaseOscillator> Oscillators[TGlobal::Oscillators];
     TPan OscPan[TGlobal::Oscillators];
     TWaveShaper WaveShaper[TGlobal::Filters];
     TSvfFilter Filters[TGlobal::Filters];

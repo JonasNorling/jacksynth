@@ -547,7 +547,7 @@ void TProgram::NoteOn(TUnsigned7 note, TUnsigned7 velocity)
             break;
         case OSC_OFF:
         default:
-            voice->Oscillators[i].reset(new TNoOscillator());
+            voice->Oscillators[i].reset(new TBaseOscillator());
         }
     }
 

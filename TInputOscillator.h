@@ -2,25 +2,14 @@
 #pragma once
 
 #include <cmath>
-#include "IOscillator.h"
+#include "TBaseOscillator.h"
 #include "TGlobal.h"
 
-class TInputOscillator: public IOscillator
+class TInputOscillator: public TBaseOscillator
 {
 public:
     TInputOscillator()
-    {
-    }
-    void SetFrequency(TFrequency)
-    {
-    }
-    void SetPulseWidth(float)
-    {
-    }
-    void SetSync(bool sync)
-    {
-    }
-    void SetState(TEnvelope::TState state)
+        : TBaseOscillator()
     {
     }
 

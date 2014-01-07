@@ -2,27 +2,14 @@
 #pragma once
 
 #include <cmath>
-#include "IOscillator.h"
+#include "TBaseOscillator.h"
 #include "TGlobal.h"
 
-class TSineOscillator: public IOscillator
+class TSineOscillator: public TBaseOscillator
 {
 public:
     TSineOscillator()
-            : Hz(0), Scanpos(0)
-    {
-    }
-    void SetFrequency(TFrequency hz)
-    {
-        Hz = hz;
-    }
-    void SetPulseWidth(float)
-    {
-    }
-    void SetSync(bool sync)
-    {
-    }
-    void SetState(TEnvelope::TState state)
+            : TBaseOscillator()
     {
     }
 
@@ -32,13 +19,9 @@ public:
         // FIXME: This is quite slow for some reason. Also, don't
         // increment scanpos for ever, it's going to lose precision.
         for (TSample& outs : out) {
-            outs = TGlobal::OscAmplitude * sinf(Scanpos);
-            Scanpos += Hz / TGlobal::SampleRate * 2 * M_PI;
+            outs = TGlobal::OscAmplitude * sinf(PhaseAccumulator);
+            PhaseAccumulator += Hz / TGlobal::SampleRate * 2 * M_PI;
         }
         syncout.Clear();
     }
-
-private:
-    double Hz;
-    double Scanpos;
 };

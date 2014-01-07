@@ -47,6 +47,6 @@ const std::vector<TSample> TWavetableOscillator::SineTable(generateSine());
 const std::vector<TSample> TWavetableOscillator::SquareTable(generateSquare());
 
 TWavetableOscillator::TWavetableOscillator()
-        : Hz(0), Scanpos(0), Wave(SineTable.data())
+        : TBaseOscillator(), Wave(SineTable.data())
 {
 }

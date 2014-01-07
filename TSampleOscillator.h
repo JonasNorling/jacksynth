@@ -2,28 +2,18 @@
 #pragma once
 
 #include <memory>
-#include "IOscillator.h"
+#include "TBaseOscillator.h"
 #include "TEnvelope.h"
 #include "TGlobal.h"
 
-class TSampleOscillator: public IOscillator
+class TSampleOscillator: public TBaseOscillator
 {
 UNCOPYABLE(TSampleOscillator)
     ;
 
 public:
     TSampleOscillator()
-            : Hz(0), Scanpos(0), Scanspeed(0), LoopPoint1(0), LoopPoint2(-1), State(TEnvelope::IDLE), Sample()
-    {
-    }
-    void SetFrequency(TFrequency hz)
-    {
-        Hz = hz;
-    }
-    void SetPulseWidth(float)
-    {
-    }
-    void SetSync(bool sync)
+            : TBaseOscillator(), Scanspeed(0), LoopPoint1(0), LoopPoint2(-1), State(TEnvelope::IDLE), Sample()
     {
     }
     void SetSample(TSampleBuffer* sample, double scanspeed)
@@ -44,8 +34,6 @@ public:
             TSampleBuffer& syncout);
 
 private:
-    double Hz;
-    double Scanpos;
     double Scanspeed;
     int LoopPoint1;
     int LoopPoint2;

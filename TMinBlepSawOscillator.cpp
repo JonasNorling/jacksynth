@@ -2,8 +2,9 @@
 #include "TGlobal.h"
 
 TMinBlepSawOscillator::TMinBlepSawOscillator()
-        : Hz(0), Sync(false), Scanpos(0.5), BufferPos(0), Target(0)
+        : TBaseOscillator(), BufferPos(0), Target(0)
 {
+    PhaseAccumulator = 0.5f;
     std::fill(Buffer, Buffer + BufferLen, 1.0f);
 }
 
@@ -25,25 +26,25 @@ void TMinBlepSawOscillator::Process(TSampleBuffer& in, TSampleBuffer& out,
         assert(pace > 0);
         if (pace > 0.99) pace = 0.99;
 
-        double lastpos = Scanpos;
-        Scanpos += pace;
-        if (Scanpos >= 1) {
-            Scanpos -= 1;
+        double lastpos = PhaseAccumulator;
+        PhaseAccumulator += pace;
+        if (PhaseAccumulator >= 1) {
+            PhaseAccumulator -= 1;
         }
 
         float stepA = 1.0f;
         if (Sync && syncin[sn] > 0) {
             stepA = lastpos; // FIXME: This is not precise
-            Scanpos = syncin[sn] * pace; // FIXME: Is this right?
+            PhaseAccumulator = syncin[sn] * pace; // FIXME: Is this right?
         }
 
-        assert(Scanpos >= 0);
-        assert(Scanpos <= 1);
+        assert(PhaseAccumulator >= 0);
+        assert(PhaseAccumulator <= 1);
 
-        if (lastpos > Scanpos) {
+        if (lastpos > PhaseAccumulator) {
             // Wrapped around or synced to beginning of wave. Place a step here.
-            syncout[sn] = Scanpos / pace + 0.0000001;
-            const int offset = Scanpos / pace * minblep::overSampling;
+            syncout[sn] = PhaseAccumulator / pace + 0.0000001;
+            const int offset = PhaseAccumulator / pace * minblep::overSampling;
             for (int i = 0; i < BufferLen; i++) {
                 Buffer[(BufferPos + i) % BufferLen] += stepA
                         * (-1
@@ -59,7 +60,7 @@ void TMinBlepSawOscillator::Process(TSampleBuffer& in, TSampleBuffer& out,
         TSample offsetCorrection = (minblep::integral - minblep::length) * pace;
 
         out[sn] += A
-                * (0.5 + Scanpos - Buffer[BufferPos % BufferLen]
+                * (0.5 + PhaseAccumulator - Buffer[BufferPos % BufferLen]
                         + offsetCorrection);
         Buffer[BufferPos % BufferLen] = 1.0f;
         BufferPos++;

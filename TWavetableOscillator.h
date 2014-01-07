@@ -4,10 +4,10 @@
 #include <cmath>
 #include <algorithm>
 #include "util.h"
-#include "IOscillator.h"
+#include "TBaseOscillator.h"
 #include "TGlobal.h"
 
-class TWavetableOscillator: public IOscillator
+class TWavetableOscillator: public TBaseOscillator
 {
 UNCOPYABLE(TWavetableOscillator)
     ;
@@ -16,35 +16,19 @@ public:
     static const int Wavelength = 256 * 4;
 
     TWavetableOscillator();
-    void SetFrequency(TFrequency hz)
-    {
-        Hz = hz;
-    }
-    void SetPulseWidth(float)
-    {
-    }
-    void SetSync(bool sync)
-    {
-    }
-    void SetState(TEnvelope::TState state)
-    {
-    }
 
     void Process(TSampleBuffer& in, TSampleBuffer& out, TSampleBuffer& syncin,
             TSampleBuffer& syncout)
     {
         for (TSample& outs : out) {
-            outs = linterpolate(Wave, Wavelength, Scanpos);
-            Scanpos += (Hz * Wavelength) / TGlobal::SampleRate;
-            if (Scanpos >= Wavelength) Scanpos -= Wavelength;
+            outs = linterpolate(Wave, Wavelength, PhaseAccumulator);
+            PhaseAccumulator += (Hz * Wavelength) / TGlobal::SampleRate;
+            if (PhaseAccumulator >= Wavelength) PhaseAccumulator -= Wavelength;
         }
         syncout.Clear();
     }
 
 private:
-    double Hz;
-    double Scanpos; // 0..Wavelength
-
     const TSample* Wave;
 
     static const std::vector<TSample> SineTable;
