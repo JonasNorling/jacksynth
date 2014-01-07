@@ -8,29 +8,31 @@
 
 class TButterworthLpFilter
 {
-  UNCOPYABLE(TButterworthLpFilter);
+UNCOPYABLE(TButterworthLpFilter)
+    ;
 
 public:
-  TButterworthLpFilter();
+    TButterworthLpFilter();
 
-  void SetCutoff(int cutoff);
-  void Process(TSampleBuffer& in, TSampleBuffer& out);
+    void SetCutoff(int cutoff);
+    void Process(TSampleBuffer& in, TSampleBuffer& out);
 
 private:
-  // Filter order. N=2 --> 12dB/oct, N=4 --> 24dB/oct.
-  static const int N = 4;
+    // Filter order. N=2 --> 12dB/oct, N=4 --> 24dB/oct.
+    static const int N = 4;
 
-  struct TCoeffs {
-    TSample C[N+1];
-    TSample D[N+1];
-    TSample Gain;
-  } Coeffs;
+    struct TCoeffs
+    {
+        TSample C[N + 1];
+        TSample D[N + 1];
+        TSample Gain;
+    } Coeffs;
 
-  TSample X[N+1];
-  TSample Y[N+1];
+    TSample X[N + 1];
+    TSample Y[N + 1];
 
-  float Cutoff;
+    float Cutoff;
 
-  typedef std::map<int, TCoeffs> TCache;
-  static TCache Cache;
+    typedef std::map<int, TCoeffs> TCache;
+    static TCache Cache;
 };

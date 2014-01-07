@@ -37,29 +37,30 @@
  */
 class TSvfFilter
 {
-  UNCOPYABLE(TSvfFilter);
+UNCOPYABLE(TSvfFilter)
+    ;
 
 public:
-  TSvfFilter();
+    TSvfFilter();
 
-  void SetCutoff(int cutoff);
-  void SetResonance(TFraction resonance);
-  void Process(TSampleBuffer& in, TSampleBuffer& out);
+    void SetCutoff(int cutoff);
+    void SetResonance(TFraction resonance);
+    void Process(TSampleBuffer& in, TSampleBuffer& out);
 
 private:
-  struct TCoeffs {
-    TSample f;
-    TSample q;
-  } Coeffs;
+    struct TCoeffs
+    {
+        TSample f;
+        TSample q;
+    } Coeffs;
 
-  TSample State1[2];
-  TSample State2[2];
-  float Mix[3];
-  static const int Oversample = 2;
+    TSample State1[2];
+    TSample State2[2];
+    float Mix[3];
+    static const int Oversample = 2;
 
-  TWaveShaper WaveShaper;
+    TWaveShaper WaveShaper;
 
-  void Crunch(const TCoeffs coeffs, TSample* state,
-	      const TSample& ins,
-	      TSample& lp, TSample& hp, TSample& bp);
+    void Crunch(const TCoeffs coeffs, TSample* state, const TSample& ins, TSample& lp, TSample& hp,
+            TSample& bp);
 };

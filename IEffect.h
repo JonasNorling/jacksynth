@@ -6,20 +6,35 @@
 
 class IEffect
 {
-  UNCOPYABLE(IEffect);
+UNCOPYABLE(IEffect)
+    ;
 
- public:
-  IEffect() {}
-  virtual ~IEffect() {}
-  virtual void Process(TSampleBufferCollection&, TSampleBufferCollection&) = 0;
+public:
+    IEffect()
+    {
+    }
+    virtual ~IEffect()
+    {
+    }
+    virtual void Process(TSampleBufferCollection&,
+            TSampleBufferCollection&) = 0;
 };
 
-class TNoEffect : public IEffect
+class TNoEffect: public IEffect
 {
 public:
-  TNoEffect() {}
-  virtual ~TNoEffect() {}
+    TNoEffect()
+    {
+    }
+    virtual ~TNoEffect()
+    {
+    }
 
-  void SetPulseWidth(float) { };
-  virtual void Process(TSampleBufferCollection&, TSampleBufferCollection&) { }
+    void SetPulseWidth(float)
+    {
+    }
+
+    virtual void Process(TSampleBufferCollection&, TSampleBufferCollection&)
+    {
+    }
 };

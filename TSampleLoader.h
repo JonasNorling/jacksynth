@@ -8,11 +8,14 @@
 class TSampleLoader
 {
 public:
-  TSampleLoader(const std::string& filename);
-  TSampleBuffer* GetBuffer() { return &Buffer; }
+    TSampleLoader(const std::string& filename);
+    TSampleBuffer* GetBuffer()
+    {
+        return &Buffer;
+    }
 
 private:
-  TSampleBuffer Buffer;
-  std::vector<TSample> Data;
+    TSampleBuffer Buffer;
+    std::vector<TSample> Data;
 };
 

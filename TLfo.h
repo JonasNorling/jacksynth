@@ -6,26 +6,32 @@
 
 class TLfo
 {
-  UNCOPYABLE(TLfo);
+UNCOPYABLE(TLfo)
+    ;
 
 public:
-  TLfo(float hz=0) :
-    Hz(hz),
-    Value(0),
-    Scanpos(0)
-  { }
-  void SetFrequency(float hz) { Hz = hz; }
+    TLfo(float hz = 0)
+            : Hz(hz), Value(0), Scanpos(0)
+    {
+    }
+    void SetFrequency(float hz)
+    {
+        Hz = hz;
+    }
 
-  void Step(int samples)
-  {
-    Value = sinf(Scanpos);
-    Scanpos += samples * Hz/TGlobal::SampleRate * 2*M_PI;
-  }
+    void Step(int samples)
+    {
+        Value = sinf(Scanpos);
+        Scanpos += samples * Hz / TGlobal::SampleRate * 2 * M_PI;
+    }
 
-  TFraction GetValue() const { return Value; }
+    TFraction GetValue() const
+    {
+        return Value;
+    }
 
 private:
-  float Hz;
-  TFraction Value;
-  float Scanpos;
+    float Hz;
+    TFraction Value;
+    float Scanpos;
 };

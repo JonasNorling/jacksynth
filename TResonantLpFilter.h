@@ -7,23 +7,24 @@
 
 class TResonantLpFilter
 {
-  UNCOPYABLE(TResonantLpFilter);
+UNCOPYABLE(TResonantLpFilter)
+    ;
 
 public:
-  TResonantLpFilter();
+    TResonantLpFilter();
 
-  void SetCutoff(int cutoff);
-  void SetResonance(TFraction resonance);
-  void Process(TSampleBuffer& in, TSampleBuffer& out);
+    void SetCutoff(int cutoff);
+    void SetResonance(TFraction resonance);
+    void Process(TSampleBuffer& in, TSampleBuffer& out);
 
 private:
-  void CalculateCoeffs();
+    void CalculateCoeffs();
 
-  static const int N = 4;
+    static const int N = 4;
 
-  TSample Coef[N+N+1];
-  TSample D[N];
+    TSample Coef[N + N + 1];
+    TSample D[N];
 
-  float Cutoff;
-  float Resonance;
+    float Cutoff;
+    float Resonance;
 };

@@ -13,235 +13,236 @@ int TGlobal::NyquistFrequency;
 jack_client_t* Client;
 jack_port_t* MidiIn;
 jack_port_t* MidiOut;
-std::queue< std::vector<uint8_t> > MidiOutQueue;
+std::queue<std::vector<uint8_t> > MidiOutQueue;
 
 volatile bool die = false;
 void sigterm(int)
 {
-  die = true;
+    die = true;
 }
 
 int process(jack_nframes_t nframes, void* arg)
 {
-  TJackSynth* synth = static_cast<TJackSynth*>(arg);
+    TJackSynth* synth = static_cast<TJackSynth*>(arg);
 
-  /* Process MIDI input */
-  void* inbuf = jack_port_get_buffer(MidiIn, nframes);
-  jack_nframes_t event_count = jack_midi_get_event_count(inbuf);
-  for (jack_nframes_t i=0; i<event_count; i++) {
-    jack_midi_event_t event;
-    jack_midi_event_get(&event, inbuf, i);
-    std::vector<uint8_t> data(event.buffer, event.buffer+event.size);
-    synth->HandleMidi(data);
-  }
-
-  /* Send MIDI */
-  void* outbuf = jack_port_get_buffer(MidiOut, nframes);
-  jack_midi_clear_buffer(outbuf);
-  while (!MidiOutQueue.empty()) {
-    const std::vector<uint8_t>& data = MidiOutQueue.front();
-    int ret = jack_midi_event_write(outbuf, 0,
-				    data.data(), data.size());
-    MidiOutQueue.pop();
-    if (ret != 0) {
-      fprintf(stderr, "MIDI send error\n");
+    /* Process MIDI input */
+    void* inbuf = jack_port_get_buffer(MidiIn, nframes);
+    jack_nframes_t event_count = jack_midi_get_event_count(inbuf);
+    for (jack_nframes_t i = 0; i < event_count; i++) {
+        jack_midi_event_t event;
+        jack_midi_event_get(&event, inbuf, i);
+        std::vector<uint8_t> data(event.buffer, event.buffer + event.size);
+        synth->HandleMidi(data);
     }
-  }
 
-  return synth->Process(nframes);
+    /* Send MIDI */
+    void* outbuf = jack_port_get_buffer(MidiOut, nframes);
+    jack_midi_clear_buffer(outbuf);
+    while (!MidiOutQueue.empty()) {
+        const std::vector<uint8_t>& data = MidiOutQueue.front();
+        int ret = jack_midi_event_write(outbuf, 0, data.data(), data.size());
+        MidiOutQueue.pop();
+        if (ret != 0) {
+            fprintf(stderr, "MIDI send error\n");
+        }
+    }
+
+    return synth->Process(nframes);
 }
 
 void send_midi(const std::vector<uint8_t>& data)
 {
-  MidiOutQueue.push(data);
+    MidiOutQueue.push(data);
 }
 
 void testSignalSawSweep(TJackSynth& synth)
 {
-  // This code depends on the default patch being a fairly
-  // clean saw wave.
+    // This code depends on the default patch being a fairly
+    // clean saw wave.
 
-  synth.HandleMidi({0x90, 0, 0x40}); // note 0: 8.18 Hz
-  synth.Process(int(0.5*44100) & ~0x7);
-  synth.HandleMidi({0x80, 0, 0x40}); // release note
+    synth.HandleMidi({0x90, 0, 0x40}); // note 0: 8.18 Hz
+    synth.Process(int(0.5*44100) & ~0x7);
+    synth.HandleMidi({0x80, 0, 0x40}); // release note
 
-  // Sweep
-  synth.HandleMidi({0x90, 33, 0x40}); // note 33: A 55Hz
-  synth.Process(int(0.2*44100) & ~0x7);
-  for (float octave = 0; octave < 6; octave += 0.0005) {
-    synth.SetPitchBend(octave * 6);
-    synth.Process(16);
-  }
-  synth.Process(int(0.2*44100) & ~0x7);
-  synth.HandleMidi({0x80, 33, 0x40}); // release note
-  synth.Process(int(0.2*44100) & ~0x7);
+    // Sweep
+    synth.HandleMidi({0x90, 33, 0x40}); // note 33: A 55Hz
+    synth.Process(int(0.2*44100) & ~0x7);
+    for (float octave = 0; octave < 6; octave += 0.0005) {
+        synth.SetPitchBend(octave * 6);
+        synth.Process(16);
+    }
+    synth.Process(int(0.2*44100) & ~0x7);
+    synth.HandleMidi({0x80, 33, 0x40}); // release note
+    synth.Process(int(0.2*44100) & ~0x7);
 }
 
 void testSignalFilterSweep(TJackSynth& synth)
 {
-  const float speed = 1.001f;
+    const float speed = 1.001f;
 
-  int value = 8000;
-  synth.HandleMidi({0xf0, 0x7f, PARAM_DISTORTION, 1, hi7(value), lo7(value), 0xf7});
-  value = 8000;
-  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(value), lo7(value), 0xf7});
-  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(value), lo7(value), 0xf7});
-  value = 0;
-  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 0, hi7(value), lo7(value), 0xf7});
-  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 1, hi7(value), lo7(value), 0xf7});
+    int value = 8000;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_DISTORTION, 1, hi7(value), lo7(value), 0xf7});
+    value = 8000;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(value), lo7(value), 0xf7});
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(value), lo7(value), 0xf7});
+    value = 0;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 0, hi7(value), lo7(value), 0xf7});
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 1, hi7(value), lo7(value), 0xf7});
 
-  synth.HandleMidi({0x90, TGlobal::MidiNoteA4, 0x70});
-  synth.HandleMidi({0x90, TGlobal::MidiNoteA4 - 3*12, 0x70});
+    synth.HandleMidi({0x90, TGlobal::MidiNoteA4, 0x70});
+    synth.HandleMidi({0x90, TGlobal::MidiNoteA4 - 3*12, 0x70});
 
-  synth.Process(int(0.5*44100) & ~0x7);
+    synth.Process(int(0.5*44100) & ~0x7);
 
-  /* Low Q */
-  value = 0;
-  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 0, hi7(value), lo7(value), 0xf7});
-  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 1, hi7(value), lo7(value), 0xf7});
+    /* Low Q */
+    value = 0;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 0, hi7(value), lo7(value), 0xf7});
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 1, hi7(value), lo7(value), 0xf7});
 
-  for (float hz = 10; hz < 8000; hz *= speed) {
-    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
-    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
-    synth.Process(32);
-  }
+    for (float hz = 10; hz < 8000; hz *= speed) {
+        synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
+        synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
+        synth.Process(32);
+    }
 
-  synth.Process(int(0.5*44100) & ~0x7);
+    synth.Process(int(0.5*44100) & ~0x7);
 
-  /* Medium Q */
-  value = 12;
-  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 0, hi7(value), lo7(value), 0xf7});
-  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 1, hi7(value), lo7(value), 0xf7});
+    /* Medium Q */
+    value = 12;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 0, hi7(value), lo7(value), 0xf7});
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 1, hi7(value), lo7(value), 0xf7});
 
-  for (float hz = 10; hz < 8000; hz *= speed) {
-    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
-    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
-    synth.Process(32);
-  }
+    for (float hz = 10; hz < 8000; hz *= speed) {
+        synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
+        synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
+        synth.Process(32);
+    }
 
-  synth.Process(int(0.5*44100) & ~0x7);
+    synth.Process(int(0.5*44100) & ~0x7);
 
-  /* High Q */
-  value = 127;
-  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 0, hi7(value), lo7(value), 0xf7});
-  synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 1, hi7(value), lo7(value), 0xf7});
+    /* High Q */
+    value = 127;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 0, hi7(value), lo7(value), 0xf7});
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_RESONANCE, 1, hi7(value), lo7(value), 0xf7});
 
-  for (float hz = 10; hz < 8000; hz *= speed) {
-    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
-    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
-    synth.Process(32);
-  }
+    for (float hz = 10; hz < 8000; hz *= speed) {
+        synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
+        synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
+        synth.Process(32);
+    }
 
-  synth.Process(int(0.5*44100) & ~0x7);
+    synth.Process(int(0.5*44100) & ~0x7);
 }
 
 void runInJack()
 {
-  Client = jack_client_open("jacksynth", JackNullOption, 0);
-  if (!Client) {
-    std::cerr << "Cannot connect to JACK" << std::endl;
-    abort();
-  }
+    Client = jack_client_open("jacksynth", JackNullOption, 0);
+    if (!Client) {
+        std::cerr << "Cannot connect to JACK" << std::endl;
+        abort();
+    }
 
-  std::cout << "Connected to JACK:" << std::endl
-	    << "  Sample rate " << jack_get_sample_rate(Client) << " Hz" << std::endl
-	    << "  Buffer size " << jack_get_buffer_size(Client) << " frames" << std::endl
-	    << "  Sample size " << sizeof(TSample) << " bytes" << std::endl;
+    std::cout << "Connected to JACK:" << std::endl << "  Sample rate "
+            << jack_get_sample_rate(Client) << " Hz" << std::endl
+            << "  Buffer size " << jack_get_buffer_size(Client) << " frames"
+            << std::endl << "  Sample size " << sizeof(TSample) << " bytes"
+            << std::endl;
 
-  TJackAudioPort inputPortL("leftin", Client, TJackAudioPort::INPUT);
-  TJackAudioPort inputPortR("rightin", Client, TJackAudioPort::INPUT);
-  TJackAudioPort outputPortL("left", Client, TJackAudioPort::OUTPUT);
-  TJackAudioPort outputPortR("right", Client, TJackAudioPort::OUTPUT);
-  TJackAudioPort intOutPort1("int1", Client, TJackAudioPort::OUTPUT);
-  TJackAudioPort intOutPort2("int2", Client, TJackAudioPort::OUTPUT);
-  TJackAudioPort intOutPort3("int3", Client, TJackAudioPort::OUTPUT);
-  TJackAudioPort intOutPort4("int4", Client, TJackAudioPort::OUTPUT);
+    TJackAudioPort inputPortL("leftin", Client, TJackAudioPort::INPUT);
+    TJackAudioPort inputPortR("rightin", Client, TJackAudioPort::INPUT);
+    TJackAudioPort outputPortL("left", Client, TJackAudioPort::OUTPUT);
+    TJackAudioPort outputPortR("right", Client, TJackAudioPort::OUTPUT);
+    TJackAudioPort intOutPort1("int1", Client, TJackAudioPort::OUTPUT);
+    TJackAudioPort intOutPort2("int2", Client, TJackAudioPort::OUTPUT);
+    TJackAudioPort intOutPort3("int3", Client, TJackAudioPort::OUTPUT);
+    TJackAudioPort intOutPort4("int4", Client, TJackAudioPort::OUTPUT);
 
-  MidiIn = jack_port_register(Client, "MIDI-IN",
-			      JACK_DEFAULT_MIDI_TYPE,
-			      JackPortIsInput, 0);
+    MidiIn = jack_port_register(Client, "MIDI-IN",
+    JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
 
-  MidiOut = jack_port_register(Client, "MIDI-OUT",
-			       JACK_DEFAULT_MIDI_TYPE,
-			       JackPortIsOutput, 0);
+    MidiOut = jack_port_register(Client, "MIDI-OUT",
+    JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
 
-  TGlobal::SampleRate = jack_get_sample_rate(Client);
-  TGlobal::NyquistFrequency = TGlobal::SampleRate / 2;
+    TGlobal::SampleRate = jack_get_sample_rate(Client);
+    TGlobal::NyquistFrequency = TGlobal::SampleRate / 2;
 
-  TAudioPortCollection inputPorts({&inputPortL, &inputPortR});
-  TAudioPortCollection outputPorts({&outputPortL, &outputPortR});
-  TAudioPortCollection intermediateOutPorts({&intOutPort1, &intOutPort2, &intOutPort3, &intOutPort4});
-  TJackSynth synth(inputPorts, outputPorts, intermediateOutPorts);
-  synth.SetMidiSendCallback(send_midi);
+    TAudioPortCollection inputPorts( { &inputPortL, &inputPortR });
+    TAudioPortCollection outputPorts( { &outputPortL, &outputPortR });
+    TAudioPortCollection intermediateOutPorts( { &intOutPort1, &intOutPort2,
+            &intOutPort3, &intOutPort4 });
+    TJackSynth synth(inputPorts, outputPorts, intermediateOutPorts);
+    synth.SetMidiSendCallback(send_midi);
 
-  jack_set_process_callback(Client, process, &synth);
-  if (jack_activate(Client)) {
-    std::cerr << "Cannot start jackiness" << std::endl;
-    abort();
-  }
+    jack_set_process_callback(Client, process, &synth);
+    if (jack_activate(Client)) {
+        std::cerr << "Cannot start jackiness" << std::endl;
+        abort();
+    }
 
-  while (!die) sleep(1);
-  jack_client_close(Client);
+    while (!die)
+        sleep(1);
+    jack_client_close(Client);
 }
 
 static void printHelp()
 {
-  std::cout << "Usage: jacksynth [<args...>]" << std::endl
-      << " Where allowed arguments are:" << std::endl
-      << "   -t, --testsignal <N>   Generate testsignal number N, to stdout" << std::endl
-      << "   -h, --help             Print this help text" << std::endl
-      << std::endl;
+    std::cout << "Usage: jacksynth [<args...>]" << std::endl
+            << " Where allowed arguments are:" << std::endl
+            << "   -t, --testsignal <N>   Generate testsignal number N, to stdout"
+            << std::endl << "   -h, --help             Print this help text"
+            << std::endl << std::endl;
 }
 
 int main(int argc, char* argv[])
 {
-  int testsignal = 0;
+    int testsignal = 0;
 
-  struct option longopts[] = {{ "testsignal", 1, 0, 't' },
-                              { "help", no_argument, 0, 'h'},
-                              { 0, 0, 0, 0}};
-  int opt;
-  while ((opt = getopt_long(argc, argv, "h", longopts, 0)) != -1) {
-    switch (opt) {
-    case 't':
-      testsignal = atoi(optarg);
-      break;
-    default:
-    case 'h':
-      printHelp();
-      return 0;
+    struct option longopts[] = { { "testsignal", 1, 0, 't' }, { "help",
+            no_argument, 0, 'h' }, { 0, 0, 0, 0 } };
+    int opt;
+    while ((opt = getopt_long(argc, argv, "h", longopts, 0)) != -1) {
+        switch (opt) {
+        case 't':
+            testsignal = atoi(optarg);
+            break;
+        default:
+        case 'h':
+            printHelp();
+            return 0;
+        }
     }
-  }
 
-  if (testsignal) {
-    TFileAudioPort inputPortL("", TFileAudioPort::INPUT);
-    TFileAudioPort inputPortR("", TFileAudioPort::INPUT);
-    TAudioPortCollection inputPorts({&inputPortL, &inputPortR});
-    TFileAudioPort outputPortL("/dev/stdout", TFileAudioPort::OUTPUT);
-    TFileAudioPort outputPortR("/dev/null", TFileAudioPort::OUTPUT);
-    TFileAudioPort intOutPort1("/dev/null", TFileAudioPort::OUTPUT);
-    TFileAudioPort intOutPort2("/dev/null", TFileAudioPort::OUTPUT);
-    TFileAudioPort intOutPort3("/dev/null", TFileAudioPort::OUTPUT);
-    TFileAudioPort intOutPort4("/dev/null", TFileAudioPort::OUTPUT);
-    TAudioPortCollection intOutPorts({&intOutPort1, &intOutPort2, &intOutPort3, &intOutPort4});
-    TAudioPortCollection outputPorts({&outputPortL, &outputPortR});
+    if (testsignal) {
+        TFileAudioPort inputPortL("", TFileAudioPort::INPUT);
+        TFileAudioPort inputPortR("", TFileAudioPort::INPUT);
+        TAudioPortCollection inputPorts( { &inputPortL, &inputPortR });
+        TFileAudioPort outputPortL("/dev/stdout", TFileAudioPort::OUTPUT);
+        TFileAudioPort outputPortR("/dev/null", TFileAudioPort::OUTPUT);
+        TFileAudioPort intOutPort1("/dev/null", TFileAudioPort::OUTPUT);
+        TFileAudioPort intOutPort2("/dev/null", TFileAudioPort::OUTPUT);
+        TFileAudioPort intOutPort3("/dev/null", TFileAudioPort::OUTPUT);
+        TFileAudioPort intOutPort4("/dev/null", TFileAudioPort::OUTPUT);
+        TAudioPortCollection intOutPorts( { &intOutPort1, &intOutPort2,
+                &intOutPort3, &intOutPort4 });
+        TAudioPortCollection outputPorts( { &outputPortL, &outputPortR });
 
-    TGlobal::SampleRate = 44100;
-    TGlobal::NyquistFrequency = TGlobal::SampleRate / 2;
-    TJackSynth synth(inputPorts, outputPorts, intOutPorts);
+        TGlobal::SampleRate = 44100;
+        TGlobal::NyquistFrequency = TGlobal::SampleRate / 2;
+        TJackSynth synth(inputPorts, outputPorts, intOutPorts);
 
-    switch (testsignal) {
-    case 1:
-      testSignalSawSweep(synth);
-      break;
-    case 2:
-      testSignalFilterSweep(synth);
-      break;
+        switch (testsignal) {
+        case 1:
+            testSignalSawSweep(synth);
+            break;
+        case 2:
+            testSignalFilterSweep(synth);
+            break;
+        }
     }
-  } else {
-    signal(SIGINT, sigterm);
-    signal(SIGTERM, sigterm);
-    runInJack();
-  }
-  return 0;
+    else {
+        signal(SIGINT, sigterm);
+        signal(SIGTERM, sigterm);
+        runInJack();
+    }
+    return 0;
 }

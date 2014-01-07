@@ -26,57 +26,60 @@
 #include "TMinBlepPulseOscillator.h"
 #include "TGlobal.h"
 
-TMinBlepPulseOscillator::TMinBlepPulseOscillator() :
-  Hz(0), Scanpos(0.99999999), BufferPos(0), Target(0), Pw(0), NextPw(0)
+TMinBlepPulseOscillator::TMinBlepPulseOscillator()
+        : Hz(0), Scanpos(0.99999999), BufferPos(0), Target(0), Pw(0), NextPw(0)
 {
-  std::fill(Buffer, Buffer+BufferLen, 0);
+    std::fill(Buffer, Buffer + BufferLen, 0);
 }
 
-void TMinBlepPulseOscillator::Process(TSampleBuffer& in, TSampleBuffer& out, TSampleBuffer& syncin, TSampleBuffer& syncout)
+void TMinBlepPulseOscillator::Process(TSampleBuffer& in, TSampleBuffer& out,
+        TSampleBuffer& syncin, TSampleBuffer& syncout)
 {
-  const float A = TGlobal::OscAmplitude;
-  for (TSample& outs : out) {
-    float pace = Hz/TGlobal::SampleRate;
-    assert(pace > 0);
-    if (pace > 0.99) pace = 0.99;
+    const float A = TGlobal::OscAmplitude;
+    for (TSample& outs : out) {
+        float pace = Hz / TGlobal::SampleRate;
+        assert(pace > 0);
+        if (pace > 0.99) pace = 0.99;
 
-    double lastpos = Scanpos;
-    Scanpos += pace;
-    if (Scanpos >= 1) {
-      Scanpos -= 1;
-      Pw = NextPw;
+        double lastpos = Scanpos;
+        Scanpos += pace;
+        if (Scanpos >= 1) {
+            Scanpos -= 1;
+            Pw = NextPw;
+        }
+        const float pw = 0.5 + 0.5 * Pw;
+        assert(Scanpos >= 0);
+        assert(Scanpos <= 1);
+
+        // If Scanpos just went past 0, we need to place a positive
+        // edge. If it just went past pw, we need to place a negative
+        // edge. The step is constructed from minblep::length samples
+        // chosen from minblep::table.
+
+        if ((lastpos < pw && Scanpos >= pw)
+                || (lastpos < pw && lastpos > Scanpos)) {
+            int offset = (Scanpos - pw) / pace * minblep::overSampling;
+            if (Scanpos < pw) {
+                offset = ((1 + Scanpos) - pw) / pace * minblep::overSampling;
+            }
+            for (int i = 0; i < BufferLen; i++) {
+                Buffer[(BufferPos + i) % BufferLen] -= minblep::table[i
+                        * minblep::overSampling + offset];
+            }
+            Target = 0;
+        }
+        if (lastpos > Scanpos) {
+            const int offset = Scanpos / pace * minblep::overSampling;
+            for (int i = 0; i < BufferLen; i++) {
+                Buffer[(BufferPos + i) % BufferLen] += minblep::table[i
+                        * minblep::overSampling + offset];
+            }
+            Target = 1;
+        }
+
+        outs += A * (Buffer[BufferPos % BufferLen] - pw);
+        Buffer[BufferPos % BufferLen] = Target;
+        BufferPos++;
     }
-    const float pw = 0.5 + 0.5*Pw;
-    assert(Scanpos >= 0);
-    assert(Scanpos <= 1);
-
-    // If Scanpos just went past 0, we need to place a positive
-    // edge. If it just went past pw, we need to place a negative
-    // edge. The step is constructed from minblep::length samples
-    // chosen from minblep::table.
-
-    if ((lastpos < pw && Scanpos >= pw) ||
-	(lastpos < pw && lastpos > Scanpos)) {
-      int offset = (Scanpos-pw)/pace * minblep::overSampling;
-      if (Scanpos < pw) {
-	offset = ((1+Scanpos)-pw)/pace * minblep::overSampling;
-      }
-      for (int i=0; i<BufferLen; i++) {
-	Buffer[(BufferPos+i) % BufferLen] -= minblep::table[i*minblep::overSampling+offset];
-      }
-      Target = 0;
-    }
-    if (lastpos > Scanpos) {
-      const int offset = Scanpos/pace * minblep::overSampling;
-      for (int i=0; i<BufferLen; i++) {
-	Buffer[(BufferPos+i) % BufferLen] += minblep::table[i*minblep::overSampling+offset];
-      }
-      Target = 1;
-    }
-
-    outs += A * (Buffer[BufferPos % BufferLen] - pw);
-    Buffer[BufferPos % BufferLen] = Target;
-    BufferPos++;
-  }
-  syncout.Clear();
+    syncout.Clear();
 }

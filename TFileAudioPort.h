@@ -7,17 +7,18 @@
 #include "IAudioPort.h"
 #include "util.h"
 
-class TFileAudioPort : public IAudioPort
+class TFileAudioPort: public IAudioPort
 {
-  UNCOPYABLE(TFileAudioPort);
+UNCOPYABLE(TFileAudioPort)
+    ;
 
 public:
-  TFileAudioPort(std::string filename, TDirection direction);
-  virtual TSampleBuffer GetBuffer(jack_nframes_t nframes);
-  virtual void Commit();
+    TFileAudioPort(std::string filename, TDirection direction);
+    virtual TSampleBuffer GetBuffer(jack_nframes_t nframes);
+    virtual void Commit();
 
 private:
-  TDirection Direction;
-  FILE* Fd;
-  TSampleBuffer* Buffer;
+    TDirection Direction;
+    FILE* Fd;
+    TSampleBuffer* Buffer;
 };

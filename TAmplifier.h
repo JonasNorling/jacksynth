@@ -7,19 +7,22 @@
 class TAmplifier
 {
 public:
-  TAmplifier() :
-    Volume(1)
-  { }
+    TAmplifier()
+            : Volume(1)
+    {
+    }
 
-  void SetVolume(TFraction vol) { Volume = vol; }
-  void Process(TSampleBuffer& in, TSampleBuffer& out) const
-  {
-    std::transform(in.begin(), in.end(),
-		   out.begin(),
-		   [this](TSample s) -> TSample {
-		     return Volume * s;
-		   });
-  }
+    void SetVolume(TFraction vol)
+    {
+        Volume = vol;
+    }
+    void Process(TSampleBuffer& in, TSampleBuffer& out) const
+    {
+        std::transform(in.begin(), in.end(), out.begin(),
+                [this](TSample s) -> TSample {
+                    return Volume * s;
+                });
+    }
 
-  TFraction Volume;
+    TFraction Volume;
 };
