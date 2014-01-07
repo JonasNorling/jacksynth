@@ -4,7 +4,7 @@
 #include <iostream>
 
 TSampleLoader::TSampleLoader(const std::string& filename)
-        : Buffer(0, 0), Data()
+        : Buffer(0, 0), Data(), SampleRate(0)
 {
     SF_INFO info;
     memset(&info, 0, sizeof(info));
@@ -17,6 +17,7 @@ TSampleLoader::TSampleLoader(const std::string& filename)
         Data.resize(n);
         sf_read_float(sf, Data.data(), n);
         Buffer = TSampleBuffer(Data.data(), n);
+        SampleRate = info.samplerate;
         sf_close(sf);
     }
     else {

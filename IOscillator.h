@@ -3,6 +3,7 @@
 
 #include "util.h"
 #include "IAudioPort.h"
+#include "TEnvelope.h"
 
 class IOscillator
 {
@@ -20,6 +21,7 @@ public:
     virtual void SetFrequency(TFrequency hz) = 0;
     virtual void SetPulseWidth(float pw) = 0;
     virtual void SetSync(bool sync) = 0;
+    virtual void SetState(TEnvelope::TState state) = 0;
     virtual void Process(TSampleBuffer& in, TSampleBuffer& out,
             TSampleBuffer& syncin, TSampleBuffer& syncout) = 0;
 };
@@ -41,6 +43,9 @@ public:
     {
     }
     void SetSync(bool sync)
+    {
+    }
+    void SetState(TEnvelope::TState state)
     {
     }
 

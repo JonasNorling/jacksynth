@@ -14,8 +14,14 @@ public:
         return &Buffer;
     }
 
+    int GetSampleRate() const
+    {
+        return SampleRate;
+    }
+
 private:
     TSampleBuffer Buffer;
     std::vector<TSample> Data;
+    int SampleRate;
 };
 

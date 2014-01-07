@@ -347,6 +347,9 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
             v->WaveShaper[0].SetDepth(WaveShaper[0]);
             v->WaveShaper[1].SetDepth(WaveShaper[1]);
 
+            v->Oscillators[0]->SetState(v->AmpEg.GetState());
+            v->Oscillators[1]->SetState(v->AmpEg.GetState());
+            v->Oscillators[2]->SetState(v->AmpEg.GetState());
             v->Oscillators[0]->SetFrequency(
                     key_hz * ModulationFactor(TModulation::OSC1_FREQ, *voice));
             v->Oscillators[1]->SetFrequency(
@@ -533,7 +536,9 @@ void TProgram::NoteOn(TUnsigned7 note, TUnsigned7 velocity)
             break;
         case OSC_SAMPLE: {
             TSampleOscillator *o = new TSampleOscillator();
-            o->SetSample(SampleLoader.GetBuffer());
+            o->SetSample(SampleLoader.GetBuffer(), TGlobal::HzA4 * double(TGlobal::SampleRate) / SampleLoader.GetSampleRate());
+            o->SetLoopPoints(SampleLoader.GetBuffer()->GetCount() * 0.6,
+                    SampleLoader.GetBuffer()->GetCount() * 0.8);
             voice->Oscillators[i].reset(o);
             break;
         }

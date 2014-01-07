@@ -22,6 +22,9 @@ public:
     {
         Sync = sync;
     }
+    void SetState(TEnvelope::TState state)
+    {
+    }
 
     void Process(TSampleBuffer& in, TSampleBuffer& out, TSampleBuffer& syncin,
             TSampleBuffer& syncout);

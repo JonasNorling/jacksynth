@@ -5,10 +5,13 @@ void TSampleOscillator::Process(TSampleBuffer& in, TSampleBuffer& out, TSampleBu
 {
     if (Sample) {
         for (TSample& outs : out) {
-            if (Scanpos <= Sample->GetCount()) {
-                outs = (*Sample)[Scanpos] * 4 * TGlobal::OscAmplitude;
+            if (LoopPoint2 >= -1 && Scanpos > LoopPoint2 && State <= TEnvelope::SUSTAIN ) {
+                Scanpos = LoopPoint1 + Scanpos - LoopPoint2;
             }
-            Scanpos += float(Hz) / TGlobal::HzA4;
+            if (Scanpos <= Sample->GetCount()) {
+                outs = (*Sample)[int(Scanpos)] * 4 * TGlobal::OscAmplitude;
+            }
+            Scanpos += Hz / Scanspeed;
         }
     }
     syncout.Clear();
