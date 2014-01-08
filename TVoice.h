@@ -20,7 +20,7 @@ UNCOPYABLE(TVoice)
 
 public:
     TVoice(TFrequency hz, TUnsigned7 velocity)
-            : State(PLAYING), Hz(hz), Velocity(velocity), DeleteMe(false), AmpEg(), FiltEg()
+            : State(PLAYING), Hz(hz), Velocity(velocity), AmpEg(), FiltEg()
     {
     }
 
@@ -30,13 +30,14 @@ public:
 
     enum TState
     {
-        PLAYING, SUSTAINED, // waiting for sustain pedal to be released
-        RELEASED
+        PLAYING,
+        SUSTAINED, // waiting for sustain pedal to be released
+        RELEASED, // key released; envelope in release phase
+        FINISHED, // no longer playing, please delete me
     } State;
 
     TFrequency Hz;
     TUnsigned7 Velocity;
-    bool DeleteMe; //< Voice has finished playing
 
     std::unique_ptr<TBaseOscillator> Oscillators[TGlobal::Oscillators];
     TPan OscPan[TGlobal::Oscillators];

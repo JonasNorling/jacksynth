@@ -357,7 +357,7 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
             v->Lfos[1].Step(subframe);
 
             if (v->AmpEg.GetState() == TEnvelope::FINISHED) {
-                v->DeleteMe = true;
+                v->State = TVoice::TState::FINISHED;
             }
 
             // Update modulations
@@ -477,7 +477,7 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
     }
 
     for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
-        if (voice->voice->DeleteMe) {
+        if (voice->voice->State == TVoice::TState::FINISHED) {
             Voices.erase(voice);
             break;
         }
@@ -813,7 +813,7 @@ void TProgram::SetParameter(int unit, TParameter param, int value, bool echo)
 
     if (echo) {
         ParameterChanged(unit, param, value);
-  }
+    }
 }
 
 void TProgram::DumpParameters()
