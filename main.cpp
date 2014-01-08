@@ -14,6 +14,7 @@ jack_client_t* Client;
 jack_port_t* MidiIn;
 jack_port_t* MidiOut;
 std::queue<std::vector<uint8_t> > MidiOutQueue;
+TTimer TimerProcess("Jack CB");
 
 volatile bool die = false;
 void sigterm(int)
@@ -23,6 +24,8 @@ void sigterm(int)
 
 int process(jack_nframes_t nframes, void* arg)
 {
+    TimerProcess.Start();
+
     TJackSynth* synth = static_cast<TJackSynth*>(arg);
 
     /* Process MIDI input */
@@ -47,7 +50,11 @@ int process(jack_nframes_t nframes, void* arg)
         }
     }
 
-    return synth->Process(nframes);
+    synth->Process(nframes);
+
+    TimerProcess.Stop();
+
+    return 0;
 }
 
 void send_midi(const std::vector<uint8_t>& data)

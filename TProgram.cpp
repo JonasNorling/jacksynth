@@ -820,6 +820,8 @@ void TProgram::DumpParameters()
 {
     ParameterChanged(0, PARAM_FILTER_CUTOFF_HZ, FilterCutoff[0]);
     ParameterChanged(1, PARAM_FILTER_CUTOFF_HZ, FilterCutoff[1]);
+    ParameterChanged(0, PARAM_FILTER_RESONANCE, FilterResonance[0] * 128);
+    ParameterChanged(1, PARAM_FILTER_RESONANCE, FilterResonance[1] * 128);
     ParameterChanged(0, PARAM_LFO_FREQUENCY_FRACHZ, LfoFrequency[0] * 128);
     ParameterChanged(1, PARAM_LFO_FREQUENCY_FRACHZ, LfoFrequency[1] * 128);
     ParameterChanged(0, PARAM_PULSE_WIDTH, OscPw[0] * 128);

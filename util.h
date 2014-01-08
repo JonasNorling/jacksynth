@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <string>
 #include <time.h>
+#include <cassert>
+
 #include "TGlobal.h"
 
 #define UNCOPYABLE(T) \
@@ -61,24 +63,35 @@ public:
 
     void Start()
     {
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &StartTime);
+        Count++;
+        clock_gettime(CLOCK_MONOTONIC, &StartTime);
     }
     void Stop()
     {
         struct timespec stopTime;
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stopTime);
-        Nanoseconds += (stopTime.tv_sec - StartTime.tv_sec) * 1000000000
+        clock_gettime(CLOCK_MONOTONIC, &stopTime);
+        unsigned ns = (stopTime.tv_sec - StartTime.tv_sec) * 1000000000LL
                 + (stopTime.tv_nsec - StartTime.tv_nsec);
+        Nanoseconds += ns;
+        MaxNs = std::max(MaxNs, ns);
+
+        if ((Count % 100000) == 0) {
+            Log();
+        }
     }
-    long long unsigned GetMs()
+    unsigned GetMs() const
     {
         return Nanoseconds / 1000000;
     }
+
+    void Log() const;
 
 private:
     std::string Name;
     struct timespec StartTime;
     long long unsigned Nanoseconds;
+    unsigned MaxNs;
+    int Count;
 };
 
 template<typename T>
