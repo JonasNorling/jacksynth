@@ -57,11 +57,19 @@ public:
         return TSampleBuffer(Begin + start, end - start);
     }
 
+    TSample PeakAmplitude()
+    {
+        TSample max = 0.0f;
+        std::for_each(begin(), end(), [&max](const TSample& s) { max = std::max(max, fabsf(s)); } );
+        return max;
+    }
+
 private:
     TSample* Begin;
     TSample* End;
     jack_nframes_t Count;
 };
+
 
 class IAudioPort
 {

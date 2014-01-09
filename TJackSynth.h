@@ -10,8 +10,31 @@
 #include "TJackAudioPort.h"
 #include "TProgram.h"
 
+/**
+ * Hold the active program (patch) for a MIDI channel. When the program is changed
+ * it is kept around until it goes quiet, as a zombie program.
+ */
+class TChannel
+{
+    UNCOPYABLE(TChannel)
+        ;
+
+public:
+    TChannel();
+    void ChangeProgram(std::unique_ptr<TProgram>& p);
+    void NoteOn(TUnsigned7 note, TUnsigned7 velocity);
+    void NoteOff(TUnsigned7 note, TUnsigned7 velocity);
+
+    std::unique_ptr<TProgram> ActiveProgram;
+    std::list< std::unique_ptr<TProgram> > ZombiePrograms;
+    bool Active; ///< Listening on this MIDI channel
+};
+
 class TJackSynth
 {
+    UNCOPYABLE(TJackSynth)
+        ;
+
 public:
     TJackSynth(TAudioPortCollection& inputPorts,
             TAudioPortCollection& outputPorts,
@@ -21,19 +44,17 @@ public:
     int Process(jack_nframes_t nframes);
     void HandleMidi(std::vector<uint8_t> data);
     void SetPitchBend(float bend); ///< Debugging crap
-    void SetMidiSendCallback(
-            std::function<void(const std::vector<uint8_t>&)> cb);
+    void SetMidiSendCallback(std::function<void(const std::vector<uint8_t>&)> cb);
 
 private:
     TAudioPortCollection& InputPorts;
     TAudioPortCollection& OutputPorts;
     TAudioPortCollection& IntOutPorts;
 
-    // Just one program for now, we should go multi-timbral in the future
-    TProgram Program;
+    std::vector<TChannel> Channels;
 
     void ParameterChangedCallback(int unit, int param, int value);
     std::function<void(const std::vector<uint8_t>&)> SendMidi;
 
-    void HandleWaldorfSysex(std::vector<uint8_t> data);
+    void HandleWaldorfSysex(TProgram& program, std::vector<uint8_t> data);
 };

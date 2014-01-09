@@ -89,15 +89,11 @@ public:
 
     TProgram();
     ~TProgram();
-    void Process(TSampleBufferCollection& in, TSampleBufferCollection& out,
+    bool Process(TSampleBufferCollection& in, TSampleBufferCollection& out,
             TSampleBufferCollection& into);
 
     void SetupConstantModulations();
-    void Patch0();
-    void Patch1();
-    void Patch2();
-    void Patch3();
-    void Patch4();
+    void SetPatch(int p);
 
     void NoteOn(TUnsigned7 note, TUnsigned7 velocity);
     void NoteOff(TUnsigned7 note, TUnsigned7 velocity);
@@ -137,6 +133,12 @@ private:
         C_LAST
     };
 
+    void Patch0();
+    void Patch1();
+    void Patch2();
+    void Patch3();
+    void Patch4();
+
     float ModulationFactor(TModulation::TDestination d, const TSoundingVoice& voice);
     float ModulationValue(TModulation::TDestination d, const TSoundingVoice& voice);
 
@@ -164,7 +166,7 @@ private:
     float Breath;
     TUnsigned7 Sustain;
 
-    TSampleLoader SampleLoader;
+    static TSampleLoader SampleLoader;
     std::unique_ptr<IEffect> Effects[TGlobal::Effects];
 
     std::vector<TModulation> Modulations;

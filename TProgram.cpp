@@ -10,6 +10,8 @@
 #include <cassert>
 #include <map>
 
+TSampleLoader TProgram::SampleLoader("sample.ogg");
+
 TProgram::TProgram()
 : Voices(),
   ParameterChanged(0),
@@ -20,13 +22,14 @@ TProgram::TProgram()
   ModWheel(0),
   Breath(0),
   Sustain(0),
-  SampleLoader("sample.ogg"),
   Modulations()
 {
+    fprintf(stderr, "Create program\n");
 }
 
 TProgram::~TProgram()
 {
+    fprintf(stderr, "Delete program\n");
 }
 
 /**
@@ -55,6 +58,17 @@ void TProgram::SetupConstantModulations()
 
     Modulations[C_F1_PAN] = {TModulation::CONSTANT, 0, TModulation::F1_PAN};
     Modulations[C_F2_PAN] = {TModulation::CONSTANT, 0, TModulation::F2_PAN};
+}
+
+void TProgram::SetPatch(int p)
+{
+    switch (p % 5) {
+    case 0: Patch0(); break;
+    case 1: Patch1(); break;
+    case 2: Patch2(); break;
+    case 3: Patch3(); break;
+    case 4: Patch4(); break;
+    }
 }
 
 void TProgram::Patch0()
@@ -336,28 +350,38 @@ void TProgram::Patch4()
     Effects[0].reset();
 }
 
-void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out,
+bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out,
         TSampleBufferCollection& into)
 {
     TimerProcess.Start();
-    const int frame = in[0]->GetCount();
-    const int subframe = 8;
-    assert(frame % subframe == 0);
-    assert(subframe <= frame);
 
-    for (int i = 0; i < frame; i += subframe) {
+    bool sounding = false;
+    const jack_nframes_t framelen = in[0]->GetCount();
+    const jack_nframes_t subframelen = 8;
+    assert(framelen % subframelen == 0);
+    assert(subframelen <= framelen);
+
+    TSample programData[2][framelen];
+    TSampleBuffer bufProgram[2] = { {programData[0], framelen}, {programData[1], framelen} };
+    bufProgram[0].Clear();
+    bufProgram[1].Clear();
+
+    for (jack_nframes_t sampleno = 0; sampleno < framelen; sampleno += subframelen) {
         TimerUpdates.Start();
         for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
             TVoice* v = voice->voice.get();
             // Step LFOs and envelopes
-            v->FiltEg.Step(subframe);
+            v->FiltEg.Step(subframelen);
             v->Lfos[0].SetFrequency(LfoFrequency[0]);
             v->Lfos[1].SetFrequency(LfoFrequency[1]);
-            v->Lfos[0].Step(subframe);
-            v->Lfos[1].Step(subframe);
+            v->Lfos[0].Step(subframelen);
+            v->Lfos[1].Step(subframelen);
 
             if (v->AmpEg.GetState() == TEnvelope::FINISHED) {
                 v->State = TVoice::TState::FINISHED;
+            }
+            else {
+                sounding = true;
             }
 
             // Update modulations
@@ -402,79 +426,79 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
         TimerUpdates.Stop();
 
         // Buffers for rendering samples into
-        TSample data[4][subframe];
-        TSampleBuffer buf[4] = { { data[0], subframe }, { data[1], subframe },
-                { data[2], subframe }, { data[3], subframe } };
+        TSample data[5][subframelen];
+        TSampleBuffer bufOscillator(data[0], subframelen);
+        TSampleBuffer bufFilter[2] = { {data[1], subframelen}, {data[2], subframelen} };
+        TSampleBuffer bufChannel[2] = { {data[3], subframelen}, {data[4], subframelen} };
+        TSampleBuffer bufProgramSlice[2] = { bufProgram[0].Slice(sampleno, sampleno + subframelen),
+                bufProgram[1].Slice(sampleno, sampleno + subframelen)};
+
+        // Buffers for communicating samples with the rest of the system
+        TSampleBuffer bufIn[2] = { in[0]->Slice(sampleno, sampleno + subframelen),
+                in[1]->Slice(sampleno, sampleno + subframelen)};
+        TSampleBuffer inr(in[1]->Slice(sampleno, sampleno + subframelen));
+        TSampleBuffer into1(into[0]->Slice(sampleno, sampleno + subframelen));
+        TSampleBuffer into2(into[1]->Slice(sampleno, sampleno + subframelen));
+        TSampleBuffer into3(into[2]->Slice(sampleno, sampleno + subframelen));
+        TSampleBuffer into4(into[3]->Slice(sampleno, sampleno + subframelen));
 
         // Buffer for keeping track of hardsync between oscillators
-        TSample hardsyncdata[subframe];
-        TSampleBuffer hardsync(hardsyncdata, subframe);
+        TSample hardsyncdata[subframelen];
+        TSampleBuffer hardsync(hardsyncdata, subframelen);
 
         TimerSamples.Start();
         // Generate audio samples for left and right channel
         for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
             TVoice* v = voice->voice.get();
 
-            TSampleBuffer inl(in[0]->Slice(i, i + subframe));
-            TSampleBuffer inr(in[1]->Slice(i, i + subframe));
-            TSampleBuffer outl(out[0]->Slice(i, i + subframe));
-            TSampleBuffer outr(out[1]->Slice(i, i + subframe));
-            TSampleBuffer into1(into[0]->Slice(i, i + subframe));
-            TSampleBuffer into2(into[1]->Slice(i, i + subframe));
-            TSampleBuffer into3(into[2]->Slice(i, i + subframe));
-            TSampleBuffer into4(into[3]->Slice(i, i + subframe));
+            bufFilter[0].Clear();
+            bufFilter[1].Clear();
+            bufChannel[0].Clear();
+            bufChannel[1].Clear();
 
-            // Render oscillators to 0 and pan to 2 & 3.
+            // Render oscillators and pan them to two buffers for the filters.
             // Hard sync is propagated from one oscillator to the next.
-            buf[2].Clear();
-            buf[3].Clear();
             hardsync.Clear();
             for (int i = 0; i < TGlobal::Oscillators; i++) {
-                buf[0].Clear();
-                v->Oscillators[i]->Process(inl, buf[0], hardsync, hardsync);
-                v->OscPan[i].Process(buf[0], buf[2], buf[3]);
-                into1.AddSamples(buf[2]); // All oscillators going to filter 1
-                into2.AddSamples(buf[3]); // All oscillators going to filter 2
+                bufOscillator.Clear();
+                v->Oscillators[i]->Process(bufIn[0], bufOscillator, hardsync, hardsync);
+                v->OscPan[i].Process(bufOscillator, bufFilter[0], bufFilter[1]);
+                into1.AddSamples(bufFilter[0]); // All oscillators going to filter 1
+                into2.AddSamples(bufFilter[1]); // All oscillators going to filter 2
             }
 
-            // Add distortion in 2 & 3
-            v->WaveShaper[0].Process(buf[2], buf[2]);
-            v->WaveShaper[1].Process(buf[3], buf[3]);
+            // Add distortion to the signal going to the filters in place,
+            // render filters in place, pan filters to left and right channels
+            for (int i = 0; i < TGlobal::Filters; i++) {
+                v->WaveShaper[i].Process(bufFilter[i], bufFilter[i]);
+                v->Filters[i].Process(bufFilter[i], bufFilter[i]);
+                v->FiltPan[i].Process(bufFilter[i], bufChannel[0], bufChannel[1]);
+            }
 
-            // render filters in 2 & 3
-            v->Filters[0].Process(buf[2], buf[2]);
-            v->Filters[1].Process(buf[3], buf[3]);
+            into3.AddSamples(bufFilter[0]); // All oscillators filter 1 output
+            into4.AddSamples(bufFilter[1]); // All oscillators filter 2 output
 
-            into3.AddSamples(buf[2]); // All oscillators filter 1 output
-            into4.AddSamples(buf[3]); // All oscillators filter 2 output
-
-            // pan filters to 0 & 1
-            buf[0].Clear();
-            buf[1].Clear();
-            v->FiltPan[0].Process(buf[2], buf[0], buf[1]);
-            v->FiltPan[1].Process(buf[3], buf[0], buf[1]);
-
-            // output volume adjusted data
-            // Need to step amp envelope on each sample, or at least
-            // interpolate it, to avoid sudden steps for short envs.
-            // FIXME!
-            // Oh, and shouldn't the amp envelope be applied before filter, distortion,
+            // Output volume adjusted data
+            // FIXME: shouldn't the amp envelope be applied before filter, distortion,
             // etc? That would make for a more dynamic sound, and it would be saner.
-            for (int j = 0; j < subframe; j++) {
+            for (jack_nframes_t j = 0; j < subframelen; j++) {
                 v->AmpEg.Step(1);
-                outl[j] += buf[0][j] * v->Velocity / 128.0 * v->AmpEg.GetValue();
-                outr[j] += buf[1][j] * v->Velocity / 128.0 * v->AmpEg.GetValue();
+                bufProgramSlice[0][j] += bufChannel[0][j] * v->Velocity / 128.0 * v->AmpEg.GetValue();
+                bufProgramSlice[1][j] += bufChannel[1][j] * v->Velocity / 128.0 * v->AmpEg.GetValue();
             }
         }
         TimerSamples.Stop();
     }
 
-    // render effects (for downmixed voices) from and to output buffers
-    TSampleBufferCollection buffers( { out[0], out[1] });
-    assert(buffers.size() == 2);
+    // Render effects (for downmixed voices)
+    TSampleBufferCollection programBuffers( { &bufProgram[0], &bufProgram[1] });
     for (int i = 0; i < TGlobal::Effects; i++) {
-        if (Effects[i]) Effects[i]->Process(buffers, buffers);
+        if (Effects[i]) Effects[i]->Process(programBuffers, programBuffers);
     }
+
+    // Add samples to output buffers
+    out[0]->AddSamples(bufProgram[0]);
+    out[1]->AddSamples(bufProgram[1]);
 
     for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
         if (voice->voice->State == TVoice::TState::FINISHED) {
@@ -482,7 +506,15 @@ void TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
             break;
         }
     }
+
+    if (!sounding) {
+        sounding = out[0]->PeakAmplitude() > TGlobal::OscAmplitude * 0.01 ||
+                out[1]->PeakAmplitude() > TGlobal::OscAmplitude * 0.01;
+    }
+
     TimerProcess.Stop();
+
+    return sounding;
 }
 
 static inline float fpow2(const float y)
@@ -614,7 +646,7 @@ void TProgram::SetController(TUnsigned7 cc, TUnsigned7 value)
     case 2: // Breath (Joystick -Y)
         Breath = value / 128.0;
         break;
-    case 64: // Sustain pedal
+    case MIDI_CC_SUSTAIN:
         Sustain = value;
         if (Sustain == 0) {
             // Release any sustained notes
@@ -627,7 +659,7 @@ void TProgram::SetController(TUnsigned7 cc, TUnsigned7 value)
             }
         }
         break;
-    case 66: // Sostenuto
+    case MIDI_CC_SOSTENUTO: // Sostenuto
         // FIXME: Implement
         break;
 
