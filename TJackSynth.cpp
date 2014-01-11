@@ -170,6 +170,8 @@ void TJackSynth::HandleWaldorfSysex(TProgram& program, std::vector<uint8_t> data
         case  98: program.SetParameter(1, PARAM_FILTER_CUTOFF_HZ, VAL2HZ_HI(v), true); break;
         case 100: program.SetParameter(1, PARAM_FILTER_RESONANCE, v, true); break;
         case 101: program.SetParameter(1, PARAM_DISTORTION, v, true); break;
+        case 129: program.SetParameter(0, PARAM_FX_MIX, v, true); break;
+        case 145: program.SetParameter(1, PARAM_FX_MIX, v, true); break;
         case 161: program.SetParameter(0, PARAM_LFO_FREQUENCY_FRACHZ, VAL2HZ_LO(v)*128, true); break;
         case 173: program.SetParameter(1, PARAM_LFO_FREQUENCY_FRACHZ, VAL2HZ_LO(v)*128, true); break;
 

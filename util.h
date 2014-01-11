@@ -108,3 +108,9 @@ T linterpolate(const T* table, int tablelen, double pos)
     double frac = pos - int(pos);
     return s0 * (1 - frac) + s1 * frac;
 }
+
+template<typename T>
+T mix(T a, T b, TFraction mix)
+{
+    return a * (1.0f - mix) + b * mix;
+}

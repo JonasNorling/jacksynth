@@ -1,16 +1,15 @@
 /* -*- mode: c++ -*- */
 #pragma once
 
-#include "IEffect.h"
+#include "TBaseEffect.h"
 
-class TDelayFx: public IEffect
+class TDelayFx: public TBaseEffect
 {
 UNCOPYABLE(TDelayFx)
     ;
 public:
     TDelayFx();
-    virtual void Process(TSampleBufferCollection& in,
-            TSampleBufferCollection& out);
+    virtual void Process(TSampleBufferCollection& in, TSampleBufferCollection& out);
 
     void SetDelay(int ms)
     {

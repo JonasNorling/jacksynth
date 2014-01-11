@@ -93,7 +93,11 @@
 	<p b="0:1" n="0x0412" label="Sustain" range="0(0%):127(100%)"/>
 	<p b="0:1" n="0x0413" label="Release [ms]" range="0:8000"/>
       </g>
-      <g label="Modulations">
+      <g label="Effects">
+	<p b="0:1" n="0xb400" label="FX1 Mix" range="0(0%):127(100%)"/>
+	<p b="0:1" n="0xb401" label="FX2 Mix" range="0(0%):127(100%)"/>	
+      </g>
+            <g label="Modulations">
 	<g b="0x2000" label="C_OSC1_PAN" data-struct="modulation"/>
 	<g b="0x2100" label="C_OSC1_DETUNE" data-struct="modulation"/>
 	<g b="0x2200" label="C_OSC1_OCTAVE" data-struct="modulation"/>

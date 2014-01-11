@@ -168,6 +168,7 @@ void TProgram::Patch1()
     Modulations.push_back( { TModulation::MODWHEEL, -octaves(7), TModulation::F2_CUTOFF });
 
     Effects[0].reset(new TDelayFx());
+    Effects[0]->SetMix(0.5);
 }
 
 /*
@@ -304,6 +305,7 @@ void TProgram::Patch3()
     fx->SetDelay(250);
     fx->SetFeedback(0.5);
     Effects[0].reset(fx);
+    Effects[0]->SetMix(0.5);
 }
 
 /*
@@ -736,6 +738,13 @@ void TProgram::SetController(TUnsigned7 cc, TUnsigned7 value)
         SetParameter(1, PARAM_DISTORTION, value, true);
         break;
 
+    case 93: // FX1 mix
+        SetParameter(0, PARAM_FX_MIX, value, true);
+        break;
+    case 94: // FX2 mix
+        SetParameter(1, PARAM_FX_MIX, value, true);
+        break;
+
     case 95: // Filter env attack
         SetParameter(0x00, PARAM_ENVELOPE, VAL2MS(value), true);
         break;
@@ -823,6 +832,11 @@ void TProgram::SetParameter(int unit, TParameter param, int value, bool echo)
         case 0: Modulations[C_OSC1_OCTAVE].Amount = semitones(value); break;
         case 1: Modulations[C_OSC2_OCTAVE].Amount = semitones(value); break;
         case 2: Modulations[C_OSC3_OCTAVE].Amount = semitones(value); break;
+        }
+    }
+    else if (param == PARAM_FX_MIX) {
+        if (Effects[unit]) {
+            Effects[unit]->SetMix(fractvalue);
         }
     }
     else if ((param & 0xe0) == 0x20) {

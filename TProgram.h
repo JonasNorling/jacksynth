@@ -1,7 +1,7 @@
 /* -*- mode: c++ -*- */
 #pragma once
 
-#include "IEffect.h"
+#include "TBaseEffect.h"
 #include "TSampleLoader.h"
 #include "TVoice.h"
 #include "util.h"
@@ -62,6 +62,7 @@ enum TParameter
     PARAM_OSC_OCTAVE = 0x08,
     PARAM_OSC_SYNC = 0x09,
     PARAM_FILTER_RESONANCE = 0x0a,
+    PARAM_FX_MIX = 0x0b,
     PARAM_MODULATION0 = 0x20
 };
 
@@ -167,7 +168,7 @@ private:
     TUnsigned7 Sustain;
 
     static TSampleLoader SampleLoader;
-    std::unique_ptr<IEffect> Effects[TGlobal::Effects];
+    std::unique_ptr<TBaseEffect> Effects[TGlobal::Effects];
 
     std::vector<TModulation> Modulations;
 };
