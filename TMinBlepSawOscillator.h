@@ -9,7 +9,7 @@
 class TMinBlepSawOscillator: public TBaseOscillator
 {
 public:
-    TMinBlepSawOscillator();
+    TMinBlepSawOscillator(TUnsigned7 note);
 
     void Process(TSampleBuffer& in, TSampleBuffer& out, TSampleBuffer& syncin,
             TSampleBuffer& syncout);

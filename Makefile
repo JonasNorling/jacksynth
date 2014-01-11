@@ -1,7 +1,8 @@
 CCFLAGS=-g -Wall -O2 -std=c++11 `pkg-config --cflags jack sndfile` -Weffc++
-CCFLAGS+=-fno-exceptions -fno-rtti
+#CCFLAGS+=-fno-exceptions
+CCFLAGS+=-fno-rtti
 #CCFLAGS+=-Winline
-LDFLAGS=-lm `pkg-config --libs jack sndfile` -lrt
+LDFLAGS=-lm `pkg-config --libs jack sndfile gig` -lrt
 
 EXE = jacksynth
 all: $(EXE)
@@ -10,6 +11,8 @@ SRCS += TButterworthLpFilter.cpp
 SRCS += TDelayFx.cpp
 SRCS += TEnvelope.cpp
 SRCS += TFileAudioPort.cpp
+SRCS += TGigInstrument.cpp
+SRCS += TGigOscillator.cpp
 SRCS += TJackAudioPort.cpp
 SRCS += TJackSynth.cpp
 SRCS += TMinBlepPulseOscillator.cpp

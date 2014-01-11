@@ -11,8 +11,8 @@ UNCOPYABLE(TBaseOscillator)
     ;
 
 public:
-    TBaseOscillator()
-        : Hz(0), Sync(false), State(TEnvelope::IDLE), PhaseAccumulator(0.0f)
+    TBaseOscillator(TUnsigned7 note)
+        : Note(note), Hz(0), Sync(false), State(TEnvelope::IDLE), PhaseAccumulator(0.0f)
     {
     }
 
@@ -45,6 +45,7 @@ public:
     }
 
 protected:
+    TUnsigned7 Note;
     double Hz;
     bool Sync;
     TEnvelope::TState State;
