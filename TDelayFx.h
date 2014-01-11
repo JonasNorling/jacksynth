@@ -26,4 +26,5 @@ private:
     int Delay; // in samples
     TFraction Feedback;
     int ReadPos;
+    TSample FilterData[2];
 };

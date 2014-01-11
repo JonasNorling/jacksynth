@@ -2,7 +2,7 @@
 #include "TGlobal.h"
 
 TDelayFx::TDelayFx()
-        : TBaseEffect(), Delay(ms_to_samples(500)), Feedback(0.75), ReadPos(0)
+        : TBaseEffect(), Delay(ms_to_samples(500)), Feedback(0.75), ReadPos(0), FilterData{0.0f, 0.0f}
 {
     std::fill(Buffer[0], Buffer[0] + BufferSize, 0);
     std::fill(Buffer[1], Buffer[1] + BufferSize, 0);
@@ -15,6 +15,7 @@ void TDelayFx::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
     assert(out.size() == 2);
 
     const float pingpong = 0.8; /* 0.5 is neutral and will cause a mono-downmix in the buffer. */
+    const float lp = 1.0f / 4; // Lowpass filtering of delayed data - set lp=1 for no filtering
     const int framesize = in[0]->GetCount();
 
     TSampleBuffer& inl = *in[0];
@@ -36,8 +37,11 @@ void TDelayFx::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
                 (1 - pingpong) * Buffer[1][ReadPos] +
                 pingpong * Buffer[0][ReadPos]);
 
-        Buffer[0][writePos] = vl;
-        Buffer[1][writePos] = vr;
+        FilterData[0] += lp * (vl - FilterData[0]);
+        FilterData[1] += lp * (vr - FilterData[1]);
+
+        Buffer[0][writePos] = FilterData[0];
+        Buffer[1][writePos] = FilterData[1];
 
         outl[i] = mix(inl[i], Buffer[0][ReadPos], Mix);
         outr[i] = mix(inr[i], Buffer[1][ReadPos], Mix);
