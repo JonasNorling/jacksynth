@@ -19,6 +19,7 @@ SRCS += TMinBlepPulseOscillator.cpp
 SRCS += TMinBlepSawOscillator.cpp
 SRCS += TProgram.cpp
 SRCS += TResonantLpFilter.cpp
+SRCS += TReverbFx.cpp
 SRCS += TSampleLoader.cpp
 SRCS += TSampleOscillator.cpp
 SRCS += TSvfFilter.cpp

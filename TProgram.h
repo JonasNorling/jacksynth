@@ -1,7 +1,7 @@
 /* -*- mode: c++ -*- */
 #pragma once
 
-#include "IEffect.h"
+#include "TBaseEffect.h"
 #include "TSampleLoader.h"
 #include "TGigInstrument.h"
 #include "TVoice.h"
@@ -65,6 +65,7 @@ enum TParameter
     PARAM_OSC_OCTAVE = 0x08,
     PARAM_OSC_SYNC = 0x09,
     PARAM_FILTER_RESONANCE = 0x0a,
+    PARAM_FX_MIX = 0x0b,
     PARAM_MODULATION0 = 0x20
 };
 
@@ -142,6 +143,7 @@ private:
     void Patch2();
     void Patch3();
     void Patch4();
+    void Patch5();
 
     float ModulationFactor(TModulation::TDestination d, const TSoundingVoice& voice);
     float ModulationValue(TModulation::TDestination d, const TSoundingVoice& voice);
@@ -163,6 +165,7 @@ private:
     TFraction OscLevel[TGlobal::Oscillators];
     TFraction WaveShaper[TGlobal::Filters];
     TEnvelope::TSettings Envelope[2];
+    TFraction InputToEffectsMix;
 
     // Active modulations
     float PitchBend;
@@ -172,7 +175,7 @@ private:
 
     static TSampleLoader SampleLoader;
     static TGigInstrument GigInstrument;
-    std::unique_ptr<IEffect> Effects[TGlobal::Effects];
+    std::unique_ptr<TBaseEffect> Effects[TGlobal::Effects];
 
     std::vector<TModulation> Modulations;
 };

@@ -1,18 +1,19 @@
 /* -*- mode: c++ -*- */
 #pragma once
 
-#include "IEffect.h"
+#include "filters.h"
+#include "TBaseEffect.h"
+#include "TWaveShaper.h"
 
-class TDelayFx: public IEffect
+class TDelayFx: public TBaseEffect
 {
 UNCOPYABLE(TDelayFx)
     ;
 public:
     TDelayFx();
-    virtual void Process(TSampleBufferCollection& in,
-            TSampleBufferCollection& out);
+    virtual void Process(TSampleBufferCollection& in, TSampleBufferCollection& out);
 
-    void SetDelay(int ms)
+    void SetDelay(unsigned ms)
     {
         Delay = ms_to_samples(ms);
     }
@@ -20,11 +21,17 @@ public:
     {
         Feedback = f;
     }
+    void SetDistortion(TFraction depth)
+    {
+        Distortion.SetDepth(depth);
+    }
 
 private:
-    static const size_t BufferSize = 48000;
+    static const size_t BufferSize = 0x10000;
     TSample Buffer[2][BufferSize];
-    int Delay; // in samples
+    unsigned Delay; // in samples
     TFraction Feedback;
     int ReadPos;
+    TOnePoleLpFilter Filter[2];
+    TWaveShaper Distortion;
 };

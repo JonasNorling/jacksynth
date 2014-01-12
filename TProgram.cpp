@@ -5,6 +5,7 @@
 #include "TMinBlepPulseOscillator.h"
 #include "TMinBlepSawOscillator.h"
 #include "TProgram.h"
+#include "TReverbFx.h"
 #include "TSampleOscillator.h"
 #include "TSineOscillator.h"
 #include "TWavetableOscillator.h"
@@ -23,6 +24,7 @@ TProgram::TProgram()
   TimerProcess("Process"),
   TimerUpdates("Updates"),
   TimerSamples("Samples"),
+  InputToEffectsMix(0),
   PitchBend(0),
   ModWheel(0),
   Breath(0),
@@ -67,12 +69,13 @@ void TProgram::SetupConstantModulations()
 
 void TProgram::SetPatch(int p)
 {
-    switch (p % 5) {
+    switch (p % 6) {
     case 0: Patch0(); break;
     case 1: Patch1(); break;
     case 2: Patch2(); break;
     case 3: Patch3(); break;
     case 4: Patch4(); break;
+    case 5: Patch5(); break;
     }
 }
 
@@ -172,7 +175,12 @@ void TProgram::Patch1()
     Modulations.push_back( { TModulation::MODWHEEL, -octaves(7), TModulation::F1_CUTOFF });
     Modulations.push_back( { TModulation::MODWHEEL, -octaves(7), TModulation::F2_CUTOFF });
 
-    Effects[0].reset(new TDelayFx());
+    TDelayFx* fx = new TDelayFx();
+    fx->SetDelay(500);
+    fx->SetFeedback(0.6);
+    fx->SetDistortion(0.2);
+    Effects[0].reset(fx);
+    Effects[0]->SetMix(0.5);
 }
 
 /*
@@ -241,7 +249,8 @@ void TProgram::Patch2()
     Modulations.push_back( { TModulation::LFO2, 0.4, TModulation::OSC1_PAN });
     Modulations.push_back( { TModulation::LFO2, -0.4, TModulation::OSC2_PAN });
 
-    Effects[0].reset();
+    Effects[0].reset(new TReverbFx);
+    Effects[0]->SetMix(0.25);
 }
 
 /*
@@ -307,8 +316,10 @@ void TProgram::Patch3()
 
     TDelayFx* fx = new TDelayFx();
     fx->SetDelay(250);
-    fx->SetFeedback(0.5);
+    fx->SetFeedback(0.6);
+    fx->SetDistortion(0.2);
     Effects[0].reset(fx);
+    Effects[0]->SetMix(0.5);
 }
 
 /*
@@ -353,6 +364,24 @@ void TProgram::Patch4()
     Modulations.push_back( { TModulation::MODWHEEL, 4, TModulation::F2_RESONANCE });
 
     Effects[0].reset();
+}
+
+/**
+ * A guitarr effect patch
+ */
+void TProgram::Patch5()
+{
+    Modulations.clear();
+    SetupConstantModulations();
+
+    InputToEffectsMix = 3.0f;
+
+    TDelayFx* fx = new TDelayFx();
+    fx->SetDelay(500);
+    fx->SetFeedback(0.6);
+    fx->SetDistortion(0.2);
+    Effects[0].reset(fx);
+    Effects[0]->SetMix(0.5);
 }
 
 bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out,
@@ -485,6 +514,18 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
             }
         }
         TimerSamples.Stop();
+    }
+
+    // Add audio inputs
+    if (InputToEffectsMix > 0.0f) {
+        TSample tempData[framelen];
+        TSampleBuffer bufTemp(tempData, framelen);
+
+        TAmplifier amplifier(InputToEffectsMix);
+        amplifier.Process(*in[0], bufTemp);
+        bufProgram[0].AddSamples(bufTemp);
+        amplifier.Process(*in[1], bufTemp);
+        bufProgram[1].AddSamples(bufTemp);
     }
 
     // Render effects (for downmixed voices)
@@ -739,6 +780,13 @@ void TProgram::SetController(TUnsigned7 cc, TUnsigned7 value)
         SetParameter(1, PARAM_DISTORTION, value, true);
         break;
 
+    case 93: // FX1 mix
+        SetParameter(0, PARAM_FX_MIX, value, true);
+        break;
+    case 94: // FX2 mix
+        SetParameter(1, PARAM_FX_MIX, value, true);
+        break;
+
     case 95: // Filter env attack
         SetParameter(0x00, PARAM_ENVELOPE, VAL2MS(value), true);
         break;
@@ -826,6 +874,11 @@ void TProgram::SetParameter(int unit, TParameter param, int value, bool echo)
         case 0: Modulations[C_OSC1_OCTAVE].Amount = semitones(value); break;
         case 1: Modulations[C_OSC2_OCTAVE].Amount = semitones(value); break;
         case 2: Modulations[C_OSC3_OCTAVE].Amount = semitones(value); break;
+        }
+    }
+    else if (param == PARAM_FX_MIX) {
+        if (Effects[unit]) {
+            Effects[unit]->SetMix(fractvalue);
         }
     }
     else if ((param & 0xe0) == 0x20) {
