@@ -139,6 +139,7 @@ private:
     void Patch2();
     void Patch3();
     void Patch4();
+    void Patch5();
 
     float ModulationFactor(TModulation::TDestination d, const TSoundingVoice& voice);
     float ModulationValue(TModulation::TDestination d, const TSoundingVoice& voice);
@@ -160,6 +161,7 @@ private:
     TFraction OscLevel[TGlobal::Oscillators];
     TFraction WaveShaper[TGlobal::Filters];
     TEnvelope::TSettings Envelope[2];
+    TFraction InputToEffectsMix;
 
     // Active modulations
     float PitchBend;

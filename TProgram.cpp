@@ -19,6 +19,7 @@ TProgram::TProgram()
   TimerProcess("Process"),
   TimerUpdates("Updates"),
   TimerSamples("Samples"),
+  InputToEffectsMix(0),
   PitchBend(0),
   ModWheel(0),
   Breath(0),
@@ -63,12 +64,13 @@ void TProgram::SetupConstantModulations()
 
 void TProgram::SetPatch(int p)
 {
-    switch (p % 5) {
+    switch (p % 6) {
     case 0: Patch0(); break;
     case 1: Patch1(); break;
     case 2: Patch2(); break;
     case 3: Patch3(); break;
     case 4: Patch4(); break;
+    case 5: Patch5(); break;
     }
 }
 
@@ -168,7 +170,11 @@ void TProgram::Patch1()
     Modulations.push_back( { TModulation::MODWHEEL, -octaves(7), TModulation::F1_CUTOFF });
     Modulations.push_back( { TModulation::MODWHEEL, -octaves(7), TModulation::F2_CUTOFF });
 
-    Effects[0].reset(new TDelayFx());
+    TDelayFx* fx = new TDelayFx();
+    fx->SetDelay(500);
+    fx->SetFeedback(0.6);
+    fx->SetDistortion(0.2);
+    Effects[0].reset(fx);
     Effects[0]->SetMix(0.5);
 }
 
@@ -305,7 +311,8 @@ void TProgram::Patch3()
 
     TDelayFx* fx = new TDelayFx();
     fx->SetDelay(250);
-    fx->SetFeedback(0.5);
+    fx->SetFeedback(0.6);
+    fx->SetDistortion(0.2);
     Effects[0].reset(fx);
     Effects[0]->SetMix(0.5);
 }
@@ -352,6 +359,24 @@ void TProgram::Patch4()
     Envelope[1] = {Attack: 20, Decay: 0, Sustain: 1.0, Release: 20};
 
     Effects[0].reset();
+}
+
+/**
+ * A guitarr effect patch
+ */
+void TProgram::Patch5()
+{
+    Modulations.clear();
+    SetupConstantModulations();
+
+    InputToEffectsMix = 3.0f;
+
+    TDelayFx* fx = new TDelayFx();
+    fx->SetDelay(500);
+    fx->SetFeedback(0.6);
+    fx->SetDistortion(0.2);
+    Effects[0].reset(fx);
+    Effects[0]->SetMix(0.5);
 }
 
 bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out,
@@ -492,6 +517,18 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
             }
         }
         TimerSamples.Stop();
+    }
+
+    // Add audio inputs
+    if (InputToEffectsMix > 0.0f) {
+        TSample tempData[framelen];
+        TSampleBuffer bufTemp(tempData, framelen);
+
+        TAmplifier amplifier(InputToEffectsMix);
+        amplifier.Process(*in[0], bufTemp);
+        bufProgram[0].AddSamples(bufTemp);
+        amplifier.Process(*in[1], bufTemp);
+        bufProgram[1].AddSamples(bufTemp);
     }
 
     // Render effects (for downmixed voices)

@@ -7,8 +7,8 @@
 class TAmplifier
 {
 public:
-    TAmplifier()
-            : Volume(1)
+    TAmplifier(TFraction volume = 1.0f)
+            : Volume(volume)
     {
     }
 

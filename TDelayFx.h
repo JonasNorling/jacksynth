@@ -1,7 +1,9 @@
 /* -*- mode: c++ -*- */
 #pragma once
 
+#include "filters.h"
 #include "TBaseEffect.h"
+#include "TWaveShaper.h"
 
 class TDelayFx: public TBaseEffect
 {
@@ -11,7 +13,7 @@ public:
     TDelayFx();
     virtual void Process(TSampleBufferCollection& in, TSampleBufferCollection& out);
 
-    void SetDelay(int ms)
+    void SetDelay(unsigned ms)
     {
         Delay = ms_to_samples(ms);
     }
@@ -19,12 +21,17 @@ public:
     {
         Feedback = f;
     }
+    void SetDistortion(TFraction depth)
+    {
+        Distortion.SetDepth(depth);
+    }
 
 private:
-    static const size_t BufferSize = 48000;
+    static const size_t BufferSize = 0x10000;
     TSample Buffer[2][BufferSize];
-    int Delay; // in samples
+    unsigned Delay; // in samples
     TFraction Feedback;
     int ReadPos;
-    TSample FilterData[2];
+    TOnePoleLpFilter Filter[2];
+    TWaveShaper Distortion;
 };

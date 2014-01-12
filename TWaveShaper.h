@@ -41,8 +41,8 @@ public:
         return Depth * tanhf(x) + (1 - Depth) * x;
     }
 
-    TWaveShaper()
-            : Depth(0)
+    TWaveShaper(TFraction depth = 0.0)
+            : Depth(depth)
     {
     }
 
@@ -53,7 +53,7 @@ public:
         });
     }
 
-    void SetDepth(float depth)
+    void SetDepth(TFraction depth)
     {
         Depth = clamp(depth, 0.0f, 0.99f);
     }
