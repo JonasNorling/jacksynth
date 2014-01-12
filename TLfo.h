@@ -33,5 +33,5 @@ public:
 private:
     float Hz;
     TFraction Value;
-    float Scanpos;
+    double Scanpos;
 };

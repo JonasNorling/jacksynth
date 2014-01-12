@@ -1,5 +1,5 @@
 CCFLAGS=-g -Wall -O2 -std=c++11 `pkg-config --cflags jack sndfile` -Weffc++
-CCFLAGS+=-fno-exceptions -fno-rtti
+#CCFLAGS+=-fno-exceptions -fno-rtti
 #CCFLAGS+=-Winline
 LDFLAGS=-lm `pkg-config --libs jack sndfile` -lrt
 

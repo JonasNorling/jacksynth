@@ -62,10 +62,9 @@ void TJackSynth::HandleMidi(std::vector<uint8_t> data)
     }
     else if ((data[0] & 0xf0) == MIDI_PGMCHANGE) {
         printf("[C%d] Program change: %d\n", channel + 1, data[1]);
-        std::unique_ptr<TProgram> newProgram(new TProgram);
+        std::unique_ptr<TProgram> newProgram(new TProgram(data[1]));
         newProgram->SetParameterChangedCallback([this](int unit, int param, int value)
                 { ParameterChangedCallback(unit, param, value); });
-        newProgram->SetPatch(data[1]);
         newProgram->DumpParameters();
 
         c.ChangeProgram(newProgram);
@@ -171,7 +170,11 @@ void TJackSynth::HandleWaldorfSysex(TProgram& program, std::vector<uint8_t> data
         case 100: program.SetParameter(1, PARAM_FILTER_RESONANCE, v, true); break;
         case 101: program.SetParameter(1, PARAM_DISTORTION, v, true); break;
         case 129: program.SetParameter(0, PARAM_FX_MIX, v, true); break;
+        case 133: program.SetParameter(0, PARAM_FX_FEEDBACK, v, true); break;
+        case 134: program.SetParameter(0, PARAM_FX_DELAY, VAL2MS(v), true); break;
         case 145: program.SetParameter(1, PARAM_FX_MIX, v, true); break;
+        case 149: program.SetParameter(1, PARAM_FX_FEEDBACK, v, true); break;
+        case 150: program.SetParameter(1, PARAM_FX_DELAY, VAL2MS(v), true); break;
         case 161: program.SetParameter(0, PARAM_LFO_FREQUENCY_FRACHZ, VAL2HZ_LO(v)*128, true); break;
         case 173: program.SetParameter(1, PARAM_LFO_FREQUENCY_FRACHZ, VAL2HZ_LO(v)*128, true); break;
 

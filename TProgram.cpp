@@ -13,8 +13,9 @@
 
 TSampleLoader TProgram::SampleLoader("sample.ogg");
 
-TProgram::TProgram()
-: Voices(),
+TProgram::TProgram(int patch)
+: Patch(patch),
+  Voices(),
   ParameterChanged(0),
   TimerProcess("Process"),
   TimerUpdates("Updates"),
@@ -26,12 +27,18 @@ TProgram::TProgram()
   Sustain(0),
   Modulations()
 {
-    fprintf(stderr, "Create program\n");
+    switch (Patch % 6) {
+    case 0: Patch0(); break;
+    case 1: Patch1(); break;
+    case 2: Patch2(); break;
+    case 3: Patch3(); break;
+    case 4: Patch4(); break;
+    case 5: Patch5(); break;
+    }
 }
 
 TProgram::~TProgram()
 {
-    fprintf(stderr, "Delete program\n");
 }
 
 /**
@@ -60,18 +67,6 @@ void TProgram::SetupConstantModulations()
 
     Modulations[C_F1_PAN] = {TModulation::CONSTANT, 0, TModulation::F1_PAN};
     Modulations[C_F2_PAN] = {TModulation::CONSTANT, 0, TModulation::F2_PAN};
-}
-
-void TProgram::SetPatch(int p)
-{
-    switch (p % 6) {
-    case 0: Patch0(); break;
-    case 1: Patch1(); break;
-    case 2: Patch2(); break;
-    case 3: Patch3(); break;
-    case 4: Patch4(); break;
-    case 5: Patch5(); break;
-    }
 }
 
 void TProgram::Patch0()
@@ -172,8 +167,8 @@ void TProgram::Patch1()
 
     TDelayFx* fx = new TDelayFx();
     fx->SetDelay(500);
-    fx->SetFeedback(0.6);
-    fx->SetDistortion(0.2);
+    fx->SetFeedback(0.5);
+    fx->SetDistortion(0.15);
     Effects[0].reset(fx);
     Effects[0]->SetMix(0.5);
 }
@@ -311,8 +306,8 @@ void TProgram::Patch3()
 
     TDelayFx* fx = new TDelayFx();
     fx->SetDelay(250);
-    fx->SetFeedback(0.6);
-    fx->SetDistortion(0.2);
+    fx->SetFeedback(0.4);
+    fx->SetDistortion(0.1);
     Effects[0].reset(fx);
     Effects[0]->SetMix(0.5);
 }
@@ -375,6 +370,7 @@ void TProgram::Patch5()
     fx->SetDelay(500);
     fx->SetFeedback(0.6);
     fx->SetDistortion(0.2);
+    fx->SetLfo(10, 0.3f, 0.6f);
     Effects[0].reset(fx);
     Effects[0]->SetMix(0.5);
 }
@@ -702,6 +698,9 @@ void TProgram::SetController(TUnsigned7 cc, TUnsigned7 value)
         break;
     case MIDI_CC_SOSTENUTO: // Sostenuto
         // FIXME: Implement
+        if (Patch == 5) {
+            SetParameter(0, PARAM_FX_INSERT_GAIN, value, true);
+        }
         break;
 
         /* We use the same CC numbers as Waldorf gear at the moment,
@@ -876,6 +875,31 @@ void TProgram::SetParameter(int unit, TParameter param, int value, bool echo)
     else if (param == PARAM_FX_MIX) {
         if (Effects[unit]) {
             Effects[unit]->SetMix(fractvalue);
+        }
+    }
+    else if (param == PARAM_FX_FEEDBACK) {
+        if (Effects[unit]) {
+            TDelayFx* delayFx = dynamic_cast<TDelayFx*>(Effects[unit].get());
+            if (delayFx) {
+                delayFx->SetFeedback(fractvalue);
+            }
+        }
+    }
+    else if (param == PARAM_FX_DELAY) {
+        if (Effects[unit]) {
+            TDelayFx* delayFx = dynamic_cast<TDelayFx*>(Effects[unit].get());
+            if (delayFx) {
+                delayFx->SetDelay(value);
+            }
+        }
+    }
+    else if (param == PARAM_FX_INSERT_GAIN) {
+        if (Effects[unit]) {
+            TDelayFx* delayFx = dynamic_cast<TDelayFx*>(Effects[unit].get());
+            if (delayFx) {
+                fprintf(stderr, "Insert gain %.1f\n", fractvalue);
+                delayFx->SetInsertGain(fractvalue);
+            }
         }
     }
     else if ((param & 0xe0) == 0x20) {

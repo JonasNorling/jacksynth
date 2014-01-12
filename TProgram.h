@@ -63,6 +63,9 @@ enum TParameter
     PARAM_OSC_SYNC = 0x09,
     PARAM_FILTER_RESONANCE = 0x0a,
     PARAM_FX_MIX = 0x0b,
+    PARAM_FX_FEEDBACK = 0x0c,
+    PARAM_FX_DELAY = 0x0d,
+    PARAM_FX_INSERT_GAIN = 0x0e,
     PARAM_MODULATION0 = 0x20
 };
 
@@ -88,13 +91,12 @@ UNCOPYABLE(TProgram)
 public:
     typedef std::function<void(int, int, int)> parameter_callback_t;
 
-    TProgram();
+    TProgram(int patch);
     ~TProgram();
     bool Process(TSampleBufferCollection& in, TSampleBufferCollection& out,
             TSampleBufferCollection& into);
 
     void SetupConstantModulations();
-    void SetPatch(int p);
 
     void NoteOn(TUnsigned7 note, TUnsigned7 velocity);
     void NoteOff(TUnsigned7 note, TUnsigned7 velocity);
@@ -143,6 +145,8 @@ private:
 
     float ModulationFactor(TModulation::TDestination d, const TSoundingVoice& voice);
     float ModulationValue(TModulation::TDestination d, const TSoundingVoice& voice);
+
+    int Patch;
 
     std::list<TSoundingVoice> Voices;
     parameter_callback_t ParameterChanged;

@@ -94,8 +94,11 @@
 	<p b="0:1" n="0x0413" label="Release [ms]" range="0:8000"/>
       </g>
       <g label="Effects">
-	<p b="0:1" n="0xb400" label="FX1 Mix" range="0(0%):127(100%)"/>
-	<p b="0:1" n="0xb401" label="FX2 Mix" range="0(0%):127(100%)"/>	
+	<p b="0:1" n="0x0b00" label="FX1 Mix" range="0(0%):127(100%)"/>
+	<p b="0:1" n="0x0c00" label="FX1 Feedback" range="0(0%):127(100%)"/>
+	<p b="0:1" n="0x0d00" label="FX1 Delay" range="0:8000"/>
+	<p b="0:1" n="0x0e00" label="FX1 Insert" range="0(0%):127(100%)"/>
+	<p b="0:1" n="0x0b01" label="FX2 Mix" range="0(0%):127(100%)"/>
       </g>
             <g label="Modulations">
 	<g b="0x2000" label="C_OSC1_PAN" data-struct="modulation"/>

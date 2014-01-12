@@ -56,9 +56,11 @@ public:
 class TOnePoleLpFilter : public TFirstrOrderFilterKernel
 {
 public:
-    TOnePoleLpFilter()
+    TOnePoleLpFilter(TSample initValue = 0.0f)
         : TFirstrOrderFilterKernel(1.0f, 0, 0)
     {
+        X[0] = initValue;
+        Y[0] = initValue;
     }
 
     /**
