@@ -4,6 +4,7 @@
 #include "TMinBlepPulseOscillator.h"
 #include "TMinBlepSawOscillator.h"
 #include "TProgram.h"
+#include "TReverbFx.h"
 #include "TSampleOscillator.h"
 #include "TSineOscillator.h"
 #include "TWavetableOscillator.h"
@@ -237,7 +238,8 @@ void TProgram::Patch2()
     Modulations.push_back( { TModulation::LFO2, 0.4, TModulation::OSC1_PAN });
     Modulations.push_back( { TModulation::LFO2, -0.4, TModulation::OSC2_PAN });
 
-    Effects[0].reset();
+    Effects[0].reset(new TReverbFx);
+    Effects[0]->SetMix(0.25);
 }
 
 /*
