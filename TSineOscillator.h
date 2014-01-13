@@ -8,8 +8,8 @@
 class TSineOscillator: public TBaseOscillator
 {
 public:
-    TSineOscillator()
-            : TBaseOscillator()
+    TSineOscillator(TUnsigned7 note)
+            : TBaseOscillator(note)
     {
     }
 

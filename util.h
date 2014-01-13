@@ -53,6 +53,8 @@ static inline uint8_t lo7(int v)
 // Map 0..127 to 0.35..21247 ms
 #define VAL2MS(n) exp2f((n-12)/8.0f)
 
+#define NOTE2HZ(note) (exp2f((float(note) - TGlobal::MidiNoteA4) / 12.0) * TGlobal::HzA4)
+
 class TTimer
 {
 UNCOPYABLE(TTimer)
@@ -98,6 +100,13 @@ template<typename T>
 T clamp(T v, T min, T max)
 {
     return std::max(std::min(v, max), min);
+}
+
+template<typename T>
+T linterpolate(const T& s0, const T& s1, double pos)
+{
+    double frac = pos - int(pos);
+    return s0 * (1 - frac) + s1 * frac;
 }
 
 template<typename T>

@@ -3,6 +3,7 @@
 
 #include "TBaseEffect.h"
 #include "TSampleLoader.h"
+#include "TGigInstrument.h"
 #include "TVoice.h"
 #include "util.h"
 #include <list>
@@ -43,8 +44,10 @@ public:
         OSC3_PAN,
         F1_CUTOFF,
         F1_PAN,
+        F1_RESONANCE,
         F2_CUTOFF,
         F2_PAN,
+        F2_RESONANCE,
         VOLUME
     } Destination;
 };
@@ -77,7 +80,8 @@ enum TOscType
     OSC_SAW = 3,
     OSC_WT = 4,
     OSC_SAMPLE = 5,
-    OSC_INPUT = 6
+    OSC_INPUT = 6,
+    OSC_GIG = 7,
 };
 
 /*
@@ -174,6 +178,7 @@ private:
     TUnsigned7 Sustain;
 
     static TSampleLoader SampleLoader;
+    static TGigInstrument GigInstrument;
     std::unique_ptr<TBaseEffect> Effects[TGlobal::Effects];
 
     std::vector<TModulation> Modulations;

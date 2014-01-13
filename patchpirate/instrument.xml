@@ -39,9 +39,11 @@
     <value value="12" label="O3 Pan"/>
     <value value="13" label="F1 Co"/>
     <value value="14" label="F1 Pan"/>
-    <value value="15" label="F2 Co"/>
-    <value value="16" label="F2 Pan"/>
-    <value value="17" label="Volume"/>
+	<value value="15" label="F1 Res"/>
+    <value value="16" label="F2 Co"/>
+    <value value="17" label="F2 Pan"/>
+    <value value="18" label="F2 Res"/>
+    <value value="19" label="Volume"/>
   </list>
 
   <list name="osc-types">

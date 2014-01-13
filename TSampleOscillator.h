@@ -12,8 +12,8 @@ UNCOPYABLE(TSampleOscillator)
     ;
 
 public:
-    TSampleOscillator()
-            : TBaseOscillator(), Scanspeed(0), LoopPoint1(0), LoopPoint2(-1), State(TEnvelope::IDLE), Sample()
+    TSampleOscillator(TUnsigned7 note)
+            : TBaseOscillator(note), Scanspeed(0), LoopPoint1(0), LoopPoint2(-1), State(TEnvelope::IDLE), Sample()
     {
     }
     void SetSample(TSampleBuffer* sample, double scanspeed)

@@ -1,5 +1,6 @@
 #include "TGlobal.h"
 #include "TDelayFx.h"
+#include "TGigOscillator.h"
 #include "TInputOscillator.h"
 #include "TMinBlepPulseOscillator.h"
 #include "TMinBlepSawOscillator.h"
@@ -12,6 +13,10 @@
 #include <map>
 
 TSampleLoader TProgram::SampleLoader("sample.ogg");
+//TGigInstrument TProgram::GigInstrument("/home/jonas/gigas/maestro_concert_grand_v2.gig");
+//TGigInstrument TProgram::GigInstrument("/home/jonas/gigas/BeeThree.gig");
+//TGigInstrument TProgram::GigInstrument("/home/jonas/gigas/MelloBrass.gig");
+TGigInstrument TProgram::GigInstrument("/home/jonas/gigas/Worra's Prophet ProphOrg.gig");
 
 TProgram::TProgram(int patch)
 : Patch(patch),
@@ -313,15 +318,15 @@ void TProgram::Patch3()
 }
 
 /*
- * Hardsync test patch
+ * Gig sample test patch
  */
 void TProgram::Patch4()
 {
     Modulations.clear();
     SetupConstantModulations();
 
-    OscType[0] = OSC_SAW;
-    OscType[1] = OSC_SAW;
+    OscType[0] = OSC_GIG;
+    OscType[1] = OSC_OFF;
     OscType[2] = OSC_OFF;
 
     OscPw[0] = 0;
@@ -332,26 +337,26 @@ void TProgram::Patch4()
     OscSync[1] = false;
     OscSync[2] = false;
 
-    OscLevel[0] = 0.0;
-    OscLevel[1] = 1.0;
+    OscLevel[0] = 1.0;
+    OscLevel[1] = 0.0;
     OscLevel[2] = 0.0;
-
-    // Enable hard-sync
-    OscSync[1] = true;
-    Modulations[C_OSC2_DETUNE].Amount = octaves(1);
-    Modulations.push_back( { TModulation::MODWHEEL, octaves(1), TModulation::OSC2_FREQ });
-    Modulations.push_back( { TModulation::BREATH, octaves(-1), TModulation::OSC2_FREQ });
 
     WaveShaper[0] = 0.0;
     WaveShaper[1] = 0.0;
     LfoFrequency[0] = 1;
     LfoFrequency[1] = 1;
-    FilterCutoff[0] = 10000;
-    FilterCutoff[1] = 10000;
+    FilterCutoff[0] = 20000;
+    FilterCutoff[1] = 20000;
     FilterResonance[0] = 0.15;
     FilterResonance[1] = 0.15;
     Envelope[0] = {Attack: 20, Decay: 0, Sustain: 1.0, Release: 20};
     Envelope[1] = {Attack: 20, Decay: 0, Sustain: 1.0, Release: 20};
+
+    Modulations.push_back( { TModulation::BREATH, octaves(-2), TModulation::OSC1_FREQ });
+    Modulations.push_back( { TModulation::MODWHEEL, -octaves(5), TModulation::F1_CUTOFF });
+    Modulations.push_back( { TModulation::MODWHEEL, -octaves(5), TModulation::F2_CUTOFF });
+    Modulations.push_back( { TModulation::MODWHEEL, 4, TModulation::F1_RESONANCE });
+    Modulations.push_back( { TModulation::MODWHEEL, 4, TModulation::F2_RESONANCE });
 
     Effects[0].reset();
 }
@@ -418,18 +423,12 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
             v->Oscillators[0]->SetState(v->AmpEg.GetState());
             v->Oscillators[1]->SetState(v->AmpEg.GetState());
             v->Oscillators[2]->SetState(v->AmpEg.GetState());
-            v->Oscillators[0]->SetFrequency(
-                    key_hz * ModulationFactor(TModulation::OSC1_FREQ, *voice));
-            v->Oscillators[1]->SetFrequency(
-                    key_hz * ModulationFactor(TModulation::OSC2_FREQ, *voice));
-            v->Oscillators[2]->SetFrequency(
-                    key_hz * ModulationFactor(TModulation::OSC3_FREQ, *voice));
-            v->Oscillators[0]->SetPulseWidth(
-                    OscPw[0] * ModulationFactor(TModulation::OSC1_PW, *voice));
-            v->Oscillators[1]->SetPulseWidth(
-                    OscPw[1] * ModulationFactor(TModulation::OSC2_PW, *voice));
-            v->Oscillators[2]->SetPulseWidth(
-                    OscPw[2] * ModulationFactor(TModulation::OSC3_PW, *voice));
+            v->Oscillators[0]->SetFrequency(key_hz * ModulationFactor(TModulation::OSC1_FREQ, *voice));
+            v->Oscillators[1]->SetFrequency(key_hz * ModulationFactor(TModulation::OSC2_FREQ, *voice));
+            v->Oscillators[2]->SetFrequency(key_hz * ModulationFactor(TModulation::OSC3_FREQ, *voice));
+            v->Oscillators[0]->SetPulseWidth(OscPw[0] * ModulationFactor(TModulation::OSC1_PW, *voice));
+            v->Oscillators[1]->SetPulseWidth(OscPw[1] * ModulationFactor(TModulation::OSC2_PW, *voice));
+            v->Oscillators[2]->SetPulseWidth(OscPw[2] * ModulationFactor(TModulation::OSC3_PW, *voice));
             v->Oscillators[0]->SetSync(OscSync[0]);
             v->Oscillators[1]->SetSync(OscSync[1]);
             v->Oscillators[2]->SetSync(OscSync[2]);
@@ -439,12 +438,10 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
                     ModulationValue(TModulation::OSC2_PAN, *voice));
             v->OscPan[2].SetPan(OscLevel[2] * ModulationFactor(TModulation::OSC3_LEVEL, *voice),
                     ModulationValue(TModulation::OSC3_PAN, *voice));
-            v->Filters[0].SetCutoff(
-                    FilterCutoff[0] * ModulationFactor(TModulation::F1_CUTOFF, *voice));
-            v->Filters[1].SetCutoff(
-                    FilterCutoff[1] * ModulationFactor(TModulation::F2_CUTOFF, *voice));
-            v->Filters[0].SetResonance(FilterResonance[0]);
-            v->Filters[1].SetResonance(FilterResonance[1]);
+            v->Filters[0].SetCutoff(FilterCutoff[0] * ModulationFactor(TModulation::F1_CUTOFF, *voice));
+            v->Filters[1].SetCutoff(FilterCutoff[1] * ModulationFactor(TModulation::F2_CUTOFF, *voice));
+            v->Filters[0].SetResonance(FilterResonance[0] * ModulationFactor(TModulation::F1_RESONANCE, *voice));
+            v->Filters[1].SetResonance(FilterResonance[1] * ModulationFactor(TModulation::F1_RESONANCE, *voice));
             v->FiltPan[0].SetPan(1.0, ModulationValue(TModulation::F1_PAN, *voice));
             v->FiltPan[1].SetPan(1.0, ModulationValue(TModulation::F2_PAN, *voice));
         }
@@ -605,25 +602,25 @@ inline float TProgram::ModulationValue(TModulation::TDestination d, const TSound
 
 void TProgram::NoteOn(TUnsigned7 note, TUnsigned7 velocity)
 {
-    float hz = exp2f((note - TGlobal::MidiNoteA4) / 12.0) * TGlobal::HzA4;
+    float hz = NOTE2HZ(note);
     TVoice* voice = new TVoice(hz, velocity);
 
     for (int i = 0; i < TGlobal::Oscillators; i++) {
         switch (OscType[i]) {
         case OSC_SINE:
-            voice->Oscillators[i].reset(new TSineOscillator());
+            voice->Oscillators[i].reset(new TSineOscillator(note));
             break;
         case OSC_SQUARE:
-            voice->Oscillators[i].reset(new TMinBlepPulseOscillator());
+            voice->Oscillators[i].reset(new TMinBlepPulseOscillator(note));
             break;
         case OSC_SAW:
-            voice->Oscillators[i].reset(new TMinBlepSawOscillator());
+            voice->Oscillators[i].reset(new TMinBlepSawOscillator(note));
             break;
         case OSC_WT:
-            voice->Oscillators[i].reset(new TWavetableOscillator());
+            voice->Oscillators[i].reset(new TWavetableOscillator(note));
             break;
         case OSC_SAMPLE: {
-            TSampleOscillator *o = new TSampleOscillator();
+            TSampleOscillator *o = new TSampleOscillator(note);
             o->SetSample(SampleLoader.GetBuffer(), TGlobal::HzA4 * double(TGlobal::SampleRate) / SampleLoader.GetSampleRate());
             o->SetLoopPoints(SampleLoader.GetBuffer()->GetCount() * 0.6,
                     SampleLoader.GetBuffer()->GetCount() * 0.8);
@@ -631,11 +628,17 @@ void TProgram::NoteOn(TUnsigned7 note, TUnsigned7 velocity)
             break;
         }
         case OSC_INPUT:
-            voice->Oscillators[i].reset(new TInputOscillator());
+            voice->Oscillators[i].reset(new TInputOscillator(note));
             break;
+        case OSC_GIG: {
+            TGigOscillator *o = new TGigOscillator(note);
+            o->SetInstrument(GigInstrument);
+            voice->Oscillators[i].reset(o);
+            break;
+        }
         case OSC_OFF:
         default:
-            voice->Oscillators[i].reset(new TBaseOscillator());
+            voice->Oscillators[i].reset(new TBaseOscillator(note));
         }
     }
 
