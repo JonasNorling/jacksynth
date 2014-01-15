@@ -13,10 +13,10 @@
 #include <map>
 
 TSampleLoader TProgram::SampleLoader("sample.ogg");
-//TGigInstrument TProgram::GigInstrument("/home/jonas/gigas/maestro_concert_grand_v2.gig");
+TGigInstrument TProgram::GigInstrument("/home/jonas/gigas/maestro_concert_grand_v2.gig");
 //TGigInstrument TProgram::GigInstrument("/home/jonas/gigas/BeeThree.gig");
 //TGigInstrument TProgram::GigInstrument("/home/jonas/gigas/MelloBrass.gig");
-TGigInstrument TProgram::GigInstrument("/home/jonas/gigas/Worra's Prophet ProphOrg.gig");
+//TGigInstrument TProgram::GigInstrument("/home/jonas/gigas/Worra's Prophet ProphOrg.gig");
 
 TProgram::TProgram(int patch)
 : Patch(patch),
@@ -349,7 +349,7 @@ void TProgram::Patch4()
     FilterCutoff[1] = 20000;
     FilterResonance[0] = 0.15;
     FilterResonance[1] = 0.15;
-    Envelope[0] = {Attack: 20, Decay: 0, Sustain: 1.0, Release: 20};
+    Envelope[0] = {Attack: 5, Decay: 0, Sustain: 1.0, Release: 500};
     Envelope[1] = {Attack: 20, Decay: 0, Sustain: 1.0, Release: 20};
 
     Modulations.push_back( { TModulation::BREATH, octaves(-2), TModulation::OSC1_FREQ });
@@ -605,22 +605,26 @@ void TProgram::NoteOn(TUnsigned7 note, TUnsigned7 velocity)
     float hz = NOTE2HZ(note);
     TVoice* voice = new TVoice(hz, velocity);
 
+    TNoteData noteData;
+    noteData.Note = note;
+    noteData.Velocity = velocity;
+
     for (int i = 0; i < TGlobal::Oscillators; i++) {
         switch (OscType[i]) {
         case OSC_SINE:
-            voice->Oscillators[i].reset(new TSineOscillator(note));
+            voice->Oscillators[i].reset(new TSineOscillator(noteData));
             break;
         case OSC_SQUARE:
-            voice->Oscillators[i].reset(new TMinBlepPulseOscillator(note));
+            voice->Oscillators[i].reset(new TMinBlepPulseOscillator(noteData));
             break;
         case OSC_SAW:
-            voice->Oscillators[i].reset(new TMinBlepSawOscillator(note));
+            voice->Oscillators[i].reset(new TMinBlepSawOscillator(noteData));
             break;
         case OSC_WT:
-            voice->Oscillators[i].reset(new TWavetableOscillator(note));
+            voice->Oscillators[i].reset(new TWavetableOscillator(noteData));
             break;
         case OSC_SAMPLE: {
-            TSampleOscillator *o = new TSampleOscillator(note);
+            TSampleOscillator *o = new TSampleOscillator(noteData);
             o->SetSample(SampleLoader.GetBuffer(), TGlobal::HzA4 * double(TGlobal::SampleRate) / SampleLoader.GetSampleRate());
             o->SetLoopPoints(SampleLoader.GetBuffer()->GetCount() * 0.6,
                     SampleLoader.GetBuffer()->GetCount() * 0.8);
@@ -628,17 +632,17 @@ void TProgram::NoteOn(TUnsigned7 note, TUnsigned7 velocity)
             break;
         }
         case OSC_INPUT:
-            voice->Oscillators[i].reset(new TInputOscillator(note));
+            voice->Oscillators[i].reset(new TInputOscillator(noteData));
             break;
         case OSC_GIG: {
-            TGigOscillator *o = new TGigOscillator(note);
+            TGigOscillator *o = new TGigOscillator(noteData);
             o->SetInstrument(GigInstrument);
             voice->Oscillators[i].reset(o);
             break;
         }
         case OSC_OFF:
         default:
-            voice->Oscillators[i].reset(new TBaseOscillator(note));
+            voice->Oscillators[i].reset(new TBaseOscillator(noteData));
         }
     }
 

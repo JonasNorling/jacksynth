@@ -5,14 +5,20 @@
 #include "IAudioPort.h"
 #include "TEnvelope.h"
 
+struct TNoteData
+{
+    TUnsigned7 Note;
+    TUnsigned7 Velocity;
+};
+
 class TBaseOscillator
 {
 UNCOPYABLE(TBaseOscillator)
     ;
 
 public:
-    TBaseOscillator(TUnsigned7 note)
-        : Note(note), Hz(0), Sync(false), State(TEnvelope::IDLE), PhaseAccumulator(0.0f)
+    TBaseOscillator(const TNoteData& noteData)
+        : NoteData(noteData), Hz(0), Sync(false), State(TEnvelope::IDLE), PhaseAccumulator(0.0f)
     {
     }
 
@@ -45,7 +51,7 @@ public:
     }
 
 protected:
-    TUnsigned7 Note;
+    TNoteData NoteData;
     double Hz;
     bool Sync;
     TEnvelope::TState State;

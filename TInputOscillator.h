@@ -8,8 +8,8 @@
 class TInputOscillator: public TBaseOscillator
 {
 public:
-    TInputOscillator(TUnsigned7 note)
-        : TBaseOscillator(note)
+    TInputOscillator(const TNoteData& noteData)
+        : TBaseOscillator(noteData)
     {
     }
 

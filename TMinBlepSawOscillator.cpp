@@ -1,8 +1,8 @@
 #include "TMinBlepSawOscillator.h"
 #include "TGlobal.h"
 
-TMinBlepSawOscillator::TMinBlepSawOscillator(TUnsigned7 note)
-        : TBaseOscillator(note), BufferPos(0), Target(0)
+TMinBlepSawOscillator::TMinBlepSawOscillator(const TNoteData& noteData)
+        : TBaseOscillator(noteData), BufferPos(0), Target(0)
 {
     PhaseAccumulator = 0.5f;
     std::fill(Buffer, Buffer + BufferLen, 1.0f);

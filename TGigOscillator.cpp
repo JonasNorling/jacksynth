@@ -3,19 +3,20 @@
 void TGigOscillator::SetInstrument(TGigInstrument& instrument)
 {
     Instrument = &instrument;
-    Region = Instrument->Instrument->GetRegion(Note);
+    Region = Instrument->Instrument->GetRegion(NoteData.Note);
     if (Region) {
-        fprintf(stderr, "[%d] Region with %d dimensions totalling %d dim regions\n", Note, Region->Dimensions, Region->DimensionRegions);
+        fprintf(stderr, "[%d] Region with %d dimensions totalling %d dim regions\n",
+                NoteData.Note, Region->Dimensions, Region->DimensionRegions);
         for (unsigned d = 0; d < Region->Dimensions; d++) {
             gig::dimension_def_t& dim = Region->pDimensionDefinitions[d];
-            fprintf(stderr, "  Dimension %d is %d with %d bits\n", d, dim.dimension, dim.bits);
+            //fprintf(stderr, "  Dimension %d is %d with %d bits\n", d, dim.dimension, dim.bits);
         }
 
-        uint dimValues[8] = {0, 64, 0, 0, 0, 0, 0, 0};
+        uint dimValues[8] = {0, NoteData.Velocity, 0, 0, 0, 0, 0, 0};
         gig::DimensionRegion* dimReg = Region->GetDimensionRegionByValue(dimValues);
 
         fprintf(stderr, "  Dimension Region: %d loops, note %d\n", dimReg->SampleLoops, dimReg->UnityNote);
-        fprintf(stderr, "  Unity note %d + 0x%x\n", Region->UnityNote, Region->FineTune);
+        //fprintf(stderr, "  Unity note %d + 0x%x\n", Region->UnityNote, Region->FineTune);
 
         Sample = dimReg->pSample;
         if (Sample) {
@@ -26,8 +27,13 @@ void TGigOscillator::SetInstrument(TGigInstrument& instrument)
             if (SampleData.pStart == NULL) {
                 SampleData = Sample->LoadSampleData();
             }
-            UnityHz = NOTE2HZ(Sample->MIDIUnityNote + double(Sample->FineTune) / double(0x100000000LL));
-            fprintf(stderr, "    Unity note %d + 0x%x -> %.2f Hz\n", Sample->MIDIUnityNote, Sample->FineTune, UnityHz);
+            if (dimReg->PitchTrack) {
+                UnityHz = NOTE2HZ(Sample->MIDIUnityNote + double(Sample->FineTune) / double(0x100000000LL));
+            }
+            else {
+                UnityHz = NOTE2HZ(NoteData.Note);
+            }
+            //fprintf(stderr, "    Unity note %d + 0x%x -> %.2f Hz\n", Sample->MIDIUnityNote, Sample->FineTune, UnityHz);
         }
         else {
             fprintf(stderr, "No sample\n");

@@ -15,7 +15,7 @@ UNCOPYABLE(TWavetableOscillator)
 public:
     static const int Wavelength = 256 * 4;
 
-    TWavetableOscillator(TUnsigned7 note);
+    TWavetableOscillator(const TNoteData& noteData);
 
     void Process(TSampleBuffer& in, TSampleBuffer& out, TSampleBuffer& syncin,
             TSampleBuffer& syncout)

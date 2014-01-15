@@ -12,7 +12,7 @@ UNCOPYABLE(TMinBlepPulseOscillator)
     ;
 
 public:
-    TMinBlepPulseOscillator(TUnsigned7 note);
+    TMinBlepPulseOscillator(const TNoteData& noteData);
 
     /* pw = 0 --> 50% duty cycle
      * pw = 1 --> 100% duty cycle */

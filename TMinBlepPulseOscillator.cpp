@@ -26,8 +26,8 @@
 #include "TMinBlepPulseOscillator.h"
 #include "TGlobal.h"
 
-TMinBlepPulseOscillator::TMinBlepPulseOscillator(TUnsigned7 note)
-        : TBaseOscillator(note), BufferPos(0), Target(0), Pw(0), NextPw(0)
+TMinBlepPulseOscillator::TMinBlepPulseOscillator(const TNoteData& noteData)
+        : TBaseOscillator(noteData), BufferPos(0), Target(0), Pw(0), NextPw(0)
 {
     PhaseAccumulator = 0.99999999;
     std::fill(Buffer, Buffer + BufferLen, 0);

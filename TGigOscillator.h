@@ -11,8 +11,8 @@ UNCOPYABLE(TGigOscillator)
     ;
 
 public:
-    TGigOscillator(TUnsigned7 note)
-        : TBaseOscillator(note), Instrument(NULL), Region(NULL), Sample(NULL), SampleData(), UnityHz(0)
+    TGigOscillator(const TNoteData& noteData)
+        : TBaseOscillator(noteData), Instrument(NULL), Region(NULL), Sample(NULL), SampleData(), UnityHz(0)
     {
     }
 
