@@ -358,7 +358,12 @@ void TProgram::Patch4()
     Modulations.push_back( { TModulation::MODWHEEL, 4, TModulation::F1_RESONANCE });
     Modulations.push_back( { TModulation::MODWHEEL, 4, TModulation::F2_RESONANCE });
 
-    Effects[0].reset();
+    TDelayFx* fx = new TDelayFx();
+    fx->SetDelay(100);
+    fx->SetFeedback(0.7);
+    fx->SetDistortion(0.0);
+    Effects[0].reset(fx);
+    Effects[0]->SetMix(0.0);
 }
 
 /**

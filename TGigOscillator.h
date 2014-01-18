@@ -12,9 +12,10 @@ UNCOPYABLE(TGigOscillator)
 
 public:
     TGigOscillator(const TNoteData& noteData)
-        : TBaseOscillator(noteData), Instrument(NULL), Region(NULL), Sample(NULL), SampleData(), UnityHz(0)
+        : TBaseOscillator(noteData), Instrument(NULL), Region(NULL), Sample(NULL), UnityHz(0), StreamId(-1), Stream(NULL)
     {
     }
+    ~TGigOscillator();
 
     void SetInstrument(TGigInstrument& instrument);
 
@@ -25,6 +26,8 @@ private:
     TGigInstrument* Instrument;
     gig::Region* Region;
     gig::Sample* Sample;
-    gig::buffer_t SampleData;
     float UnityHz;
+
+    int StreamId;
+    TGigStream* Stream;
 };
