@@ -20,7 +20,7 @@ UNCOPYABLE(TVoice)
 
 public:
     TVoice(TFrequency hz, TUnsigned7 velocity)
-            : State(PLAYING), Hz(hz), Velocity(velocity), AmpEg(), FiltEg()
+            : State(PLAYING), Hold(false), Hz(hz), Velocity(velocity), AmpEg(), FiltEg()
     {
     }
 
@@ -35,6 +35,8 @@ public:
         RELEASED, // key released; envelope in release phase
         FINISHED, // no longer playing, please delete me
     } State;
+
+    bool Hold; // Note is held by sostenuto pedal
 
     TFrequency Hz;
     TUnsigned7 Velocity;

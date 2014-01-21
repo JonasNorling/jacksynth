@@ -671,7 +671,11 @@ void TProgram::NoteOff(TUnsigned7 note, TUnsigned7 velocity)
     for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
         if (voice->note == note) {
             if (voice->voice->AmpEg.GetState() < TEnvelope::RELEASE) {
-                if (Sustain == 0) {
+                if (voice->voice->Hold) {
+                    // Held by sostenuto pedal; don't release
+                    voice->voice->State = TVoice::TState::RELEASED;
+                }
+                else if (Sustain == 0) {
                     voice->voice->State = TVoice::TState::RELEASED;
                     voice->voice->AmpEg.Release(velocity);
                     voice->voice->FiltEg.Release(velocity);
@@ -708,11 +712,36 @@ void TProgram::SetController(TUnsigned7 cc, TUnsigned7 value)
             }
         }
         break;
-    case MIDI_CC_SOSTENUTO: // Sostenuto
-        // FIXME: Implement
+    case MIDI_CC_SOSTENUTO: // Sostenuto (hold pedal)
+        // Use as a modifier for the guitar FX program
         if (Patch == 5) {
             SetParameter(0, PARAM_FX_INSERT_GAIN, value, true);
         }
+
+        if (value == 0) {
+            // Release all currently latched notes
+            for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
+                if (voice->voice->Hold) {
+                    voice->voice->Hold = false;
+                    if (voice->voice->State == TVoice::TState::RELEASED && Sustain == 0) {
+                        voice->voice->AmpEg.Release(0x40);
+                        voice->voice->FiltEg.Release(0x40);
+                    }
+                    else if (Sustain) {
+                        voice->voice->State = TVoice::TState::SUSTAINED;
+                    }
+                }
+            }
+        }
+        else {
+            // Latch all currently held notes
+            for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
+                if (voice->voice->State == TVoice::TState::PLAYING) {
+                    voice->voice->Hold = true;
+                }
+            }
+        }
+
         break;
 
         /* We use the same CC numbers as Waldorf gear at the moment,
