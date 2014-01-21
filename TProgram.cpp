@@ -657,11 +657,18 @@ void TProgram::NoteOn(TUnsigned7 note, TUnsigned7 velocity)
 
     if (Voices.size() > TGlobal::SoftVoiceLimit) {
         fprintf(stderr, "Now %zu voices\n", Voices.size());
-        TSoundingVoice& steal = Voices.front();
-        if (steal.voice->AmpEg.GetState() < TEnvelope::RELEASE) {
-            steal.voice->State = TVoice::TState::RELEASED;
-            steal.voice->AmpEg.Release(velocity);
-            steal.voice->FiltEg.Release(velocity);
+
+        // Steal an old voice
+        for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
+            if (!voice->voice->Stolen) {
+                if (voice->voice->AmpEg.GetState() < TEnvelope::RELEASE) {
+                    voice->voice->State = TVoice::TState::RELEASED;
+                    voice->voice->AmpEg.Release(64);
+                    voice->voice->FiltEg.Release(64);
+                }
+                voice->voice->Stolen = true;
+                break;
+            }
         }
     }
 }

@@ -20,7 +20,7 @@ UNCOPYABLE(TVoice)
 
 public:
     TVoice(TFrequency hz, TUnsigned7 velocity)
-            : State(PLAYING), Hold(false), Hz(hz), Velocity(velocity), AmpEg(), FiltEg()
+            : State(PLAYING), Hold(false), Stolen(false), Hz(hz), Velocity(velocity), AmpEg(), FiltEg()
     {
     }
 
@@ -37,6 +37,7 @@ public:
     } State;
 
     bool Hold; // Note is held by sostenuto pedal
+    bool Stolen; // This voice has been killed off to make place for a new one
 
     TFrequency Hz;
     TUnsigned7 Velocity;
