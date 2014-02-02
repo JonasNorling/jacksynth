@@ -57,7 +57,7 @@ private:
     TSample State1[2];
     TSample State2[2];
     float Mix[3];
-    static const int Oversample = 2;
+    static const int Oversample = 4;
 
     TWaveShaper WaveShaper;
 
