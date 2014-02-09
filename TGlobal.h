@@ -45,3 +45,5 @@ static const uint8_t MIDI_REALTIME_MASK = 0xf8;
 
 static const uint8_t MIDI_CC_SUSTAIN = 64;
 static const uint8_t MIDI_CC_SOSTENUTO = 66;
+
+static const uint8_t MIDI_BEATS_PER_Q = 24;

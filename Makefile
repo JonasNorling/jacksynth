@@ -7,6 +7,7 @@ EXE = jacksynth
 all: $(EXE)
 
 SRCS += TButterworthLpFilter.cpp
+SRCS += TClockRecovery.cpp
 SRCS += TDelayFx.cpp
 SRCS += TEnvelope.cpp
 SRCS += TFileAudioPort.cpp

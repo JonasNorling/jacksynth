@@ -26,6 +26,7 @@ int process(jack_nframes_t nframes, void* arg)
 {
     TimerProcess.Start();
 
+    static uint64_t frametime = 0;
     TJackSynth* synth = static_cast<TJackSynth*>(arg);
 
     /* Process MIDI input */
@@ -35,7 +36,7 @@ int process(jack_nframes_t nframes, void* arg)
         jack_midi_event_t event;
         jack_midi_event_get(&event, inbuf, i);
         std::vector<uint8_t> data(event.buffer, event.buffer + event.size);
-        synth->HandleMidi(data);
+        synth->HandleMidi(data, frametime + event.time);
     }
 
     /* Send MIDI */
@@ -52,6 +53,7 @@ int process(jack_nframes_t nframes, void* arg)
 
     synth->Process(nframes);
 
+    frametime += nframes;
     TimerProcess.Stop();
 
     return 0;

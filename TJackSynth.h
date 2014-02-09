@@ -7,6 +7,7 @@
 #include <memory>
 #include <map>
 
+#include "TClockRecovery.h"
 #include "TJackAudioPort.h"
 #include "TProgram.h"
 
@@ -42,7 +43,7 @@ public:
 
     virtual ~TJackSynth();
     int Process(jack_nframes_t nframes);
-    void HandleMidi(std::vector<uint8_t> data);
+    void HandleMidi(std::vector<uint8_t> data, uint64_t timestamp = 0);
     void SetPitchBend(float bend); ///< Debugging crap
     void SetMidiSendCallback(std::function<void(const std::vector<uint8_t>&)> cb);
 
@@ -50,6 +51,8 @@ private:
     TAudioPortCollection& InputPorts;
     TAudioPortCollection& OutputPorts;
     TAudioPortCollection& IntOutPorts;
+
+    TClockRecovery ClockRecovery;
 
     std::vector<TChannel> Channels;
 

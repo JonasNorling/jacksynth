@@ -40,7 +40,7 @@ TJackSynth::TJackSynth(TAudioPortCollection& inputPorts,
         TAudioPortCollection& outputPorts,
         TAudioPortCollection& intermediateOutPorts)
         : InputPorts(inputPorts), OutputPorts(outputPorts),
-          IntOutPorts(intermediateOutPorts), Channels(TGlobal::MidiChannels),
+          IntOutPorts(intermediateOutPorts), ClockRecovery(), Channels(TGlobal::MidiChannels),
           SendMidi(0)
 {
 }
@@ -49,13 +49,16 @@ TJackSynth::~TJackSynth()
 {
 }
 
-void TJackSynth::HandleMidi(std::vector<uint8_t> data)
+void TJackSynth::HandleMidi(std::vector<uint8_t> data, uint64_t timestamp)
 {
     uint8_t channel = data[0] & 0x0f;
     TChannel& c = Channels[channel];
 
     if (data.size() == 0) {
         return;
+    }
+    else if (data[0] == MIDI_CLOCK_TICK) {
+        ClockRecovery.Beat(timestamp);
     }
     else if (!c.Active) {
         return;
