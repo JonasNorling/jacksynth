@@ -244,6 +244,7 @@ int TJackSynth::Process(jack_nframes_t nframes)
 
     for (auto& c : Channels) {
         if (c.ActiveProgram) {
+            c.ActiveProgram->SetQuarterNoteTime(ClockRecovery.GetQuarterNoteTime());
             c.ActiveProgram->Process(ins, outs, ints);
         }
         auto p = c.ZombiePrograms.begin();

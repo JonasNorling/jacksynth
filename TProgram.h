@@ -10,6 +10,7 @@
 #include <vector>
 #include <memory>
 
+
 class TModulation
 {
 public:
@@ -105,7 +106,8 @@ public:
     void NoteOn(TUnsigned7 note, TUnsigned7 velocity);
     void NoteOff(TUnsigned7 note, TUnsigned7 velocity);
     void SetController(TUnsigned7 cc, TUnsigned7 value);
-    void SetPitchBend(float bend); // -1..1
+    void SetPitchBend(float bend); ///< -1..1
+    void SetQuarterNoteTime(float t); ///< Inverse of tempo
 
     void SetParameter(int unit, TParameter param, int value, bool echo = false);
     void DumpParameters();
@@ -176,6 +178,9 @@ private:
     float ModWheel;
     float Breath;
     TUnsigned7 Sustain;
+
+    // MIDI clock
+    THysteresis<float> QuarterNoteTime;
 
     static TSampleLoader SampleLoader;
     static TGigInstrument GigInstrument;

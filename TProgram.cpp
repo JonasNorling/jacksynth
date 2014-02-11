@@ -30,6 +30,7 @@ TProgram::TProgram(int patch)
   ModWheel(0),
   Breath(0),
   Sustain(0),
+  QuarterNoteTime(500, 1),
   Modulations()
 {
     switch (Patch % 6) {
@@ -864,7 +865,17 @@ void TProgram::SetController(TUnsigned7 cc, TUnsigned7 value)
 
 void TProgram::SetPitchBend(float bend)
 {
-  PitchBend = bend;
+    PitchBend = bend;
+}
+
+void TProgram::SetQuarterNoteTime(float t)
+{
+    QuarterNoteTime = t;
+
+    TDelayFx* delayFx = dynamic_cast<TDelayFx*>(Effects[0].get());
+    if (delayFx) {
+        //delayFx->SetDelaySamples(QuarterNoteTime);
+    }
 }
 
 void TProgram::SetParameter(int unit, TParameter param, int value, bool echo)

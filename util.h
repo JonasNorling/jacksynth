@@ -97,6 +97,23 @@ private:
 };
 
 template<typename T>
+class THysteresis
+{
+UNCOPYABLE(THysteresis);
+
+public:
+    THysteresis(T range, T v) : Range(range), Value(v) {}
+    THysteresis& operator=(T v) { if (v > Value + Range || v < Value - Range) Value = v; return *this; }
+    const T Get() const { return Value; }
+    operator const T() const { return Value; }
+private:
+    T Range;
+    T Value;
+};
+
+
+
+template<typename T>
 T clamp(T v, T min, T max)
 {
     return std::max(std::min(v, max), min);
