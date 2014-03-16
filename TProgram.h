@@ -87,6 +87,19 @@ enum TOscType
 
 /*
  * A program playing a patch. Like a MIDI channel.
+ *
+ * The synthesizer topology is defined in this class, by how Process() pipes its data.
+ * The audio pipeline is pictured below. There is also a conceptual control pipeline, not
+ * pictured. Each MIDI note event causes a new TVoice to be instantiated. That class
+ * holds the state of the voice, but does not do any processing on its own.
+ *
+ * --------------------------------------- Programs -------------------------------------
+ * ----------------------- Voices (one per key) ----------------
+ *                                               audio inputs --.                  ... --.
+ *                                                        ... --+                  ... --+
+ * oscillators[3] -> wave shapers[2] -> filters[2] -> ADSR[2] --+--> stereo effects[1] --+--> audio output
+ *                                                        ... --´                  ... --´
+ *
  */
 class TProgram
 {

@@ -557,26 +557,6 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
     return sounding;
 }
 
-static inline float fpow2(const float y)
-{
-    // musicdsp.org, Johannes M.-R.
-    union
-    {
-        float f;
-        int i;
-    } c;
-
-    int integer = (int) y;
-    if (y < 0) integer = integer - 1;
-
-    float frac = y - (float) integer;
-
-    c.i = (integer + 127) << 23;
-    c.f *= 0.33977f * frac * frac + (1.0f - 0.33977f) * frac + 1.0f;
-
-    return c.f;
-}
-
 inline float TProgram::ModulationFactor(TModulation::TDestination d, const TSoundingVoice& voice)
 {
     float mod = ModulationValue(d, voice);

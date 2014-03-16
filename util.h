@@ -44,6 +44,27 @@ static inline uint8_t lo7(int v)
     return v & 0x7f;
 }
 
+
+static inline float fpow2(const float y)
+{
+    // musicdsp.org, Johannes M.-R.
+    union
+    {
+        float f;
+        int i;
+    } c;
+
+    int integer = (int) y;
+    if (y < 0) integer = integer - 1;
+
+    float frac = y - (float) integer;
+
+    c.i = (integer + 127) << 23;
+    c.f *= 0.33977f * frac * frac + (1.0f - 0.33977f) * frac + 1.0f;
+
+    return c.f;
+}
+
 // Map 0..127 to 1..17696 Hz
 //#define VAL2HZ_HI(n) exp2f(n/9.0f)
 // Map 0..127 to 12..17955 Hz, same scale as Blofeld
