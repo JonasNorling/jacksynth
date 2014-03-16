@@ -6,53 +6,53 @@ LDFLAGS=-lm `pkg-config --libs jack sndfile gig` -lrt
 EXE = jacksynth
 all: $(EXE)
 
-SRCS += TButterworthLpFilter.cpp
-SRCS += TClockRecovery.cpp
-SRCS += TDelayFx.cpp
-SRCS += TEnvelope.cpp
-SRCS += TFileAudioPort.cpp
-SRCS += TGigInstrument.cpp
-SRCS += TGigOscillator.cpp
-SRCS += TJackAudioPort.cpp
-SRCS += TJackSynth.cpp
-SRCS += TMinBlepPulseOscillator.cpp
-SRCS += TMinBlepSawOscillator.cpp
-SRCS += TProgram.cpp
-SRCS += TResonantLpFilter.cpp
-SRCS += TReverbFx.cpp
-SRCS += TSampleLoader.cpp
-SRCS += TSampleOscillator.cpp
-SRCS += TSvfFilter.cpp
-SRCS += TWavetableOscillator.cpp
-SRCS += liir.cpp
-SRCS += main.cpp
-SRCS += util.cpp
+SRCS += src/TButterworthLpFilter.cpp
+SRCS += src/TClockRecovery.cpp
+SRCS += src/TDelayFx.cpp
+SRCS += src/TEnvelope.cpp
+SRCS += src/TFileAudioPort.cpp
+SRCS += src/TGigInstrument.cpp
+SRCS += src/TGigOscillator.cpp
+SRCS += src/TJackAudioPort.cpp
+SRCS += src/TJackSynth.cpp
+SRCS += src/TMinBlepPulseOscillator.cpp
+SRCS += src/TMinBlepSawOscillator.cpp
+SRCS += src/TProgram.cpp
+SRCS += src/TResonantLpFilter.cpp
+SRCS += src/TReverbFx.cpp
+SRCS += src/TSampleLoader.cpp
+SRCS += src/TSampleOscillator.cpp
+SRCS += src/TSvfFilter.cpp
+SRCS += src/TWavetableOscillator.cpp
+SRCS += src/liir.cpp
+SRCS += src/main.cpp
+SRCS += src/util.cpp
 
-OBJS = $(SRCS:%.cpp=build/%.o)
+OBJS = $(SRCS:src/%.cpp=build/%.o)
 
 -include deps.mk
 
 clean:
 	rm -f $(EXE) $(OBJS) deps.mk
 	rm -rf build
-	rm minblep.h
+	rm -f src/minblep.h
 
 $(EXE): $(OBJS)
 	@echo --\> $@
 	@$(CXX) -o $@ $^ $(LDFLAGS)
 
-build/%.o: %.cpp
+build/%.o: src/%.cpp
 	@echo $< --\> $@
 	@mkdir -p build
 	@$(CXX) -c -o $@ $< $(CCFLAGS)
 
-deps.mk: $(SRCS) $(TEST_SRCS)
+deps.mk: $(SRCS) $(TEST_SRCS) src/minblep.h
 	@echo --\> $@
 	@rm -f $@
 	@touch deps.mk
 
-	@for s in $^; do \
-		OBJ=build/`echo $$s | sed s/\.cpp/\.o/`; \
+	@for s in $(SRCS) $(TEST_SRCS); do \
+		OBJ=`echo $$s | sed 's/src\/\(.*\).cpp/build\/\1.o/'`; \
 		gcc -MT "$$OBJ" -MM $$s $(CCFLAGS) >> $@; \
 	done
 
@@ -82,7 +82,7 @@ showbleps: minBLEP/minblep
 	minBLEP/minblep --zerocrossings 32 --oversampling 32 --type minblep > minBLEP/data.txt
 	octave --persist minBLEP/illustration.m
 
-minblep.h: minBLEP/minblep Makefile
+src/minblep.h: minBLEP/minblep Makefile
 	minBLEP/minblep --zerocrossings 32 --oversampling 64 --header --type minblep > $@
 
 .PHONY: testspec showbleps
