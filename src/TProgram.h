@@ -6,10 +6,12 @@
 #include "TGigInstrument.h"
 #include "TVoice.h"
 #include "util.h"
+
 #include <list>
 #include <vector>
 #include <memory>
 
+#include <json/json.h>
 
 class TModulation
 {
@@ -106,11 +108,20 @@ class TProgram
 UNCOPYABLE(TProgram)
     ;
 
+private:
+    static float JsonParsePitch(const Json::Value& value);
+    static TOscType JsonParseOscillatorType(const Json::Value& value);
+    static TModulation::TSource JsonParseModSource(const Json::Value& value);
+    static TModulation::TDestination JsonParseModDestination(const Json::Value& value);
+
 public:
     typedef std::function<void(int, int, int)> parameter_callback_t;
 
     TProgram(int patch);
     ~TProgram();
+
+    bool LoadFromFile(std::string filename);
+
     bool Process(TSampleBufferCollection& in, TSampleBufferCollection& out,
             TSampleBufferCollection& into);
 
@@ -157,8 +168,6 @@ private:
 
     void Patch0();
     void Patch1();
-    void Patch2();
-    void Patch3();
     void Patch4();
     void Patch5();
 

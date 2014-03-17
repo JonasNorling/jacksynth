@@ -1,7 +1,7 @@
-CCFLAGS=-g -Wall -O2 -std=c++11 `pkg-config --cflags jack sndfile` -Weffc++
+CCFLAGS=-g -Wall -O2 -std=c++11 `pkg-config --cflags jack sndfile jsoncpp` -Weffc++
 #CCFLAGS+=-fno-exceptions -fno-rtti
 #CCFLAGS+=-Winline
-LDFLAGS=-lm `pkg-config --libs jack sndfile gig` -lrt
+LDFLAGS=-lm `pkg-config --libs jack sndfile gig jsoncpp` -lrt
 
 EXE = jacksynth
 all: $(EXE)

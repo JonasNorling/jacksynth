@@ -1,0 +1,67 @@
+// Program patch file
+//
+// Musical pitch values are given in octaves. The format supports a floating point number
+// of octaves or a string format in octaves, semitones (1/12 octave) or cents (1/100 semitone):
+// "1o", "1s" and "1c" respectively.
+//
+
+{
+	"name": "Samples test patch",
+
+	// Type of program.
+	// program: subtractive
+	"program": "subtractive",
+
+	// Oscillator setup for subtractive synthesis. List of hashes.
+	// type: sine, square, saw, wt, sample, input, gig
+	// level: <fraction>
+	// detune: <pitch>
+	// octave: <pitch>
+	// pan: -1 .. 1 -- pan to filter 1 or 2
+	// pb: <pitch> -- amount of pitch bend
+	"oscs": [
+		{ "type": "sample", "level": 1.0, "octave": 1, "detune": "10c" },
+		{ "type": "sample", "level": 0.6, "octave": 0, "detune": "-10c" },
+		{ "type": "sample", "level": 0.125, "octave": 2 } ],
+
+	// LFO setup
+	"lfos": [
+		{ "freq": 1.3 },
+		{ "freq": 0.5 } ],
+
+	// Filter setup for subtractive synthesis. List of hashes.
+	//
+	// pan: -1 .. 1 -- pan to L and R channel
+	"filters": [
+		{ "cutoff": 1980, "resonance": 0.15, "pan": -1 },
+		{ "cutoff": 1650, "resonance": 0.20, "pan": 1 } ],
+	
+	// ADSR envelope setup. List of hashes. Units in ms and fractions.
+	// First env is for amplifier (VCA)
+	// Second env is for filter
+	"envs": [
+		{ "attack": 3, "decay": 400, "sustain": 0.3, "release": 50 },
+		{ "attack": 300, "decay": 0, "sustain": 1.0, "release": 300 } ],
+
+	// Modulation routing
+	"mods": [
+		{ "src": "KEY", "amount": -2, "dst": "OSC2_LEVEL" },
+		{ "src": "KEY", "amount": "6s", "dst": "F1_CUTOFF" },
+		{ "src": "KEY", "amount": "6s", "dst": "F2_CUTOFF" },
+		{ "src": "EG1", "amount": "-2o", "dst": "F1_CUTOFF" },
+		{ "src": "EG1", "amount": "-2o", "dst": "F2_CUTOFF" },
+		{ "src": "MODWHEEL", "amount": -2.0, "dst": "OSC1_LEVEL" },
+		{ "src": "MODWHEEL", "amount": -2.0, "dst": "OSC2_LEVEL" },
+		{ "src": "MODWHEEL", "amount": 4.0, "dst": "OSC3_LEVEL" },
+		{ "src": "BREATH", "amount": "-2o", "dst": "OSC1_FREQ" },
+		{ "src": "BREATH", "amount": "-2o", "dst": "OSC2_FREQ" },
+		{ "src": "BREATH", "amount": "-2o", "dst": "OSC3_FREQ" },
+		{ "src": "LFO1", "amount": "10c", "dst": "OSC1_FREQ" },
+		{ "src": "LFO1", "amount": "-10c", "dst": "OSC2_FREQ" },
+		{ "src": "LFO2", "amount": 0.4, "dst": "OSC1_PAN" },
+		{ "src": "LFO2", "amount": -0.4, "dst": "OSC2_PAN" } ],
+
+	// Effects
+	"fx": [
+		{ "type": "reverb", "mix": 0.25 } ]
+}

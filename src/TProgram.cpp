@@ -9,8 +9,12 @@
 #include "TSampleOscillator.h"
 #include "TSineOscillator.h"
 #include "TWavetableOscillator.h"
+
+#include <json/json.h>
+
 #include <cassert>
 #include <map>
+#include <fstream>
 
 TSampleLoader TProgram::SampleLoader("sample.ogg");
 TGigInstrument TProgram::GigInstrument("/home/jonas/gigas/maestro_concert_grand_v2.gig");
@@ -36,8 +40,8 @@ TProgram::TProgram(int patch)
     switch (Patch % 6) {
     case 0: Patch0(); break;
     case 1: Patch1(); break;
-    case 2: Patch2(); break;
-    case 3: Patch3(); break;
+    case 2: LoadFromFile("patches/2.json"); break;
+    case 3: LoadFromFile("patches/3.json"); break;
     case 4: Patch4(); break;
     case 5: Patch5(); break;
     }
@@ -45,6 +49,235 @@ TProgram::TProgram(int patch)
 
 TProgram::~TProgram()
 {
+}
+
+float TProgram::JsonParsePitch(const Json::Value& value)
+{
+    if (value.isNull()) {
+        return 0.0f;
+    }
+    else if (value.isConvertibleTo(Json::realValue)) {
+        return value.asFloat();
+    }
+    else {
+        float v = 0.0f;
+        char c = '\0';
+        sscanf(value.asString().c_str(), "%f%c", &v, &c);
+        switch (c) {
+            case 'o': return octaves(v);
+            case 's': return semitones(v);
+            case 'c': return cents(v);
+        }
+    }
+    return 0.0f;
+}
+
+TOscType TProgram::JsonParseOscillatorType(const Json::Value& value)
+{
+    if (!value.isConvertibleTo(Json::stringValue)) {
+        return OSC_OFF;
+    }
+
+    const std::string type = value.asString();
+    if (type == "off") return OSC_OFF;
+    else if (type == "sine") return OSC_SINE;
+    else if (type == "square") return OSC_SQUARE;
+    else if (type == "saw") return OSC_SAW;
+    else if (type == "wt") return OSC_WT;
+    else if (type == "sample") return OSC_SAMPLE;
+    else if (type == "input") return OSC_INPUT;
+    else if (type == "gig") return OSC_GIG;
+    else return OSC_OFF;
+}
+
+TModulation::TSource TProgram::JsonParseModSource(const Json::Value& value)
+{
+    if (!value.isConvertibleTo(Json::stringValue)) {
+        return TModulation::CONSTANT;
+    }
+
+    const std::string src = value.asString();
+    if (src == "CONSTANT") return TModulation::CONSTANT;
+    else if (src == "KEY") return TModulation::KEY;
+    else if (src == "PITCHBEND") return TModulation::PITCHBEND;
+    else if (src == "LFO1") return TModulation::LFO1;
+    else if (src == "LFO2") return TModulation::LFO2;
+    else if (src == "EG1") return TModulation::EG1;
+    else if (src == "VELOCITY") return TModulation::VELOCITY;
+    else if (src == "EG1_TIMES_VELO") return TModulation::EG1_TIMES_VELO;
+    else if (src == "MODWHEEL") return TModulation::MODWHEEL;
+    else if (src == "BREATH") return TModulation::BREATH;
+    else return TModulation::CONSTANT;
+}
+
+TModulation::TDestination TProgram::JsonParseModDestination(const Json::Value& value)
+{
+    if (!value.isConvertibleTo(Json::stringValue)) {
+        return TModulation::NO_DESTINATION;
+    }
+
+    const std::string dst = value.asString();
+    if (dst == "NO_DESTINATION") return TModulation::NO_DESTINATION;
+    if (dst == "OSC1_FREQ") return TModulation::OSC1_FREQ;
+    if (dst == "OSC1_PW") return TModulation::OSC1_PW;
+    if (dst == "OSC1_LEVEL") return TModulation::OSC1_LEVEL;
+    if (dst == "OSC1_PAN") return TModulation::OSC1_PAN;
+    if (dst == "OSC2_FREQ") return TModulation::OSC2_FREQ;
+    if (dst == "OSC2_PW") return TModulation::OSC2_PW;
+    if (dst == "OSC2_LEVEL") return TModulation::OSC2_LEVEL;
+    if (dst == "OSC2_PAN") return TModulation::OSC2_PAN;
+    if (dst == "OSC3_FREQ") return TModulation::OSC3_FREQ;
+    if (dst == "OSC3_PW") return TModulation::OSC3_PW;
+    if (dst == "OSC3_LEVEL") return TModulation::OSC3_LEVEL;
+    if (dst == "OSC3_PAN") return TModulation::OSC3_PAN;
+    if (dst == "F1_CUTOFF") return TModulation::F1_CUTOFF;
+    if (dst == "F1_PAN") return TModulation::F1_PAN;
+    if (dst == "F1_RESONANCE") return TModulation::F1_RESONANCE;
+    if (dst == "F2_CUTOFF") return TModulation::F2_CUTOFF;
+    if (dst == "F2_PAN") return TModulation::F2_PAN;
+    if (dst == "F2_RESONANCE") return TModulation::F2_RESONANCE;
+    if (dst == "VOLUME") return TModulation::VOLUME;
+    else return TModulation::NO_DESTINATION;
+}
+
+bool TProgram::LoadFromFile(std::string filename)
+{
+    Modulations.clear();
+    SetupConstantModulations();
+
+    std::fstream filestream(filename);
+
+    Json::Value root;
+    Json::Reader reader;
+    if (!reader.parse(filestream, root, true)) {
+        fprintf(stderr, "Failed to parse %s: %s\n", filename.c_str(), reader.getFormattedErrorMessages().c_str());
+        return false;
+    }
+
+    const std::string program = root.get("program", "subtractive").asString();
+    const std::string name = root.get("name", "Unnamed").asString();
+
+    printf("Loading %s program: %s\n", program.c_str(), name.c_str());
+
+    // Load oscillator settings
+    {
+        struct {
+            float detune;
+            float octave;
+            float pb;
+            float pan;
+        } settings[TGlobal::Oscillators] = { 0 };
+
+        const Json::Value oscs = root["oscs"];
+        for (unsigned i = 0; i < oscs.size() && i < TGlobal::Oscillators; i++) {
+            const Json::Value osc = oscs[i];
+
+            OscType[i] = JsonParseOscillatorType(osc["type"]);
+
+            OscLevel[i] = osc["level"].asFloat();
+            OscPw[i] = osc["pw"].asFloat();
+            OscSync[i] = osc["sync"].asBool();
+
+            settings[i].detune = JsonParsePitch(osc["detune"]);
+            settings[i].octave = JsonParsePitch(osc["octave"]);
+            settings[i].pb = JsonParsePitch(osc["pb"]);
+            settings[i].pan = osc["pan"].asFloat();
+        }
+
+        Modulations[C_OSC1_DETUNE].Amount = settings[0].detune;
+        Modulations[C_OSC2_DETUNE].Amount = settings[1].detune;
+        Modulations[C_OSC3_DETUNE].Amount = settings[2].detune;
+        Modulations[C_OSC1_PAN].Amount = settings[0].pan;
+        Modulations[C_OSC2_PAN].Amount = settings[1].pan;
+        Modulations[C_OSC3_PAN].Amount = settings[2].pan;
+        Modulations[C_OSC1_OCTAVE].Amount = settings[0].octave;
+        Modulations[C_OSC2_OCTAVE].Amount = settings[1].octave;
+        Modulations[C_OSC3_OCTAVE].Amount = settings[2].octave;
+        Modulations[C_OSC1_PB].Amount = settings[0].pb;
+        Modulations[C_OSC2_PB].Amount = settings[1].pb;
+        Modulations[C_OSC3_PB].Amount = settings[2].pb;
+    }
+
+    // Load LFO settings
+    {
+        const Json::Value lfos = root["lfos"];
+        for (unsigned i = 0; i < lfos.size() && i < TGlobal::Lfos; i++) {
+            const Json::Value lfo = lfos[i];
+            LfoFrequency[i] = lfo["freq"].asFloat();
+        }
+    }
+
+    // Load filter settings
+    {
+        struct {
+            float pan;
+        } settings[TGlobal::Filters] = { 0 };
+
+        const Json::Value filters = root["filters"];
+        for (unsigned i = 0; i < filters.size() && i < TGlobal::Filters; i++) {
+            const Json::Value filter = filters[i];
+            FilterCutoff[i] = filter["cutoff"].asFloat();
+            FilterResonance[i] = filter["resonance"].asFloat();
+
+            settings[i].pan = filter["pan"].asFloat();
+        }
+
+        Modulations[C_F1_PAN].Amount = settings[0].pan;
+        Modulations[C_F2_PAN].Amount = settings[1].pan;
+    }
+
+    // Load ADSR settings
+    {
+        const Json::Value envs = root["envs"];
+        for (unsigned i = 0; i < envs.size(); i++) {
+            const Json::Value env = envs[i];
+            Envelope[i] = { Attack: env["attack"].asFloat(),
+                    Decay: env["decay"].asFloat(),
+                    Sustain: env["sustain"].asFloat(),
+                    Release: env["release"].asFloat() };
+        }
+    }
+
+    // Load modulation routing
+    {
+        const Json::Value mods = root["mods"];
+        for (unsigned i = 0; i < mods.size(); i++) {
+            const Json::Value mod = mods[i];
+            float amount = JsonParsePitch(mod["amount"]);
+            Modulations.push_back( { JsonParseModSource(mod["src"]), amount, JsonParseModDestination(mod["dst"]) });
+        }
+    }
+
+    // Load effects
+    {
+        const Json::Value effects = root["fx"];
+        for (unsigned i = 0; i < effects.size() && i < TGlobal::Effects; i++) {
+            Effects[i].reset();
+
+            const Json::Value fx = effects[i];
+            const std::string type = fx.get("type", "delay").asString();
+            TFraction mix = fx["mix"].asFloat();
+
+            if (type == "delay") {
+                float delay = fx["delay"].asFloat();
+                float feedback = fx["feedback"].asFloat();
+                float distortion = fx["distortion"].asFloat();
+
+                TDelayFx* fx = new TDelayFx();
+                fx->SetDelay(delay);
+                fx->SetFeedback(feedback);
+                fx->SetDistortion(distortion);
+                Effects[i].reset(fx);
+                Effects[i]->SetMix(mix);
+            }
+            else if (type == "reverb") {
+                Effects[i].reset(new TReverbFx);
+                Effects[i]->SetMix(mix);
+            }
+        }
+    }
+
+    return true;
 }
 
 /**
@@ -175,145 +408,6 @@ void TProgram::Patch1()
     fx->SetDelay(500);
     fx->SetFeedback(0.5);
     fx->SetDistortion(0.15);
-    Effects[0].reset(fx);
-    Effects[0]->SetMix(0.5);
-}
-
-/*
- * Samples
- */
-void TProgram::Patch2()
-{
-    Modulations.clear();
-    SetupConstantModulations();
-
-    OscType[0] = OscType[1] = OscType[2] = OSC_SAMPLE;
-
-    OscPw[0] = 0;
-    OscPw[1] = 0;
-    OscPw[2] = 0;
-
-    OscSync[0] = false;
-    OscSync[1] = false;
-    OscSync[2] = false;
-
-    OscLevel[0] = 1.0;
-    OscLevel[1] = 0.6;
-    OscLevel[2] = 1.0/8;
-
-    WaveShaper[0] = 0.0;
-    WaveShaper[1] = 0.0;
-
-    Modulations[C_OSC1_DETUNE].Amount = cents(10);
-    Modulations[C_OSC2_DETUNE].Amount = cents(-10);
-    Modulations[C_OSC1_OCTAVE].Amount = octaves(1);
-    Modulations[C_OSC2_OCTAVE].Amount = octaves(0);
-    Modulations[C_OSC3_OCTAVE].Amount = octaves(2);
-    Modulations[C_OSC1_PAN].Amount = 0; // Modulated by LFO
-    Modulations[C_OSC2_PAN].Amount = 0; // Modulated by LFO
-    Modulations[C_OSC3_PAN].Amount = 0;
-    Modulations[C_F1_PAN].Amount = 1;
-    Modulations[C_F2_PAN].Amount = -1;
-
-    Modulations.push_back( { TModulation::KEY, -2, TModulation::OSC2_LEVEL });
-
-    Envelope[0] = {Attack: 3, Decay: 400, Sustain: 0.3, Release: 150};
-    Envelope[1] = {Attack: 300, Decay: 0, Sustain: 1.0, Release: 300};
-
-    FilterCutoff[0] = 6 * TGlobal::HzE3;
-    FilterCutoff[1] = 5 * TGlobal::HzE3;
-    FilterResonance[0] = 0.15;
-    FilterResonance[1] = 0.20;
-    Modulations.push_back( { TModulation::KEY, semitones(6), TModulation::F1_CUTOFF });
-    Modulations.push_back( { TModulation::KEY, semitones(6), TModulation::F2_CUTOFF });
-    Modulations.push_back( { TModulation::EG1, -octaves(2), TModulation::F1_CUTOFF });
-    Modulations.push_back( { TModulation::EG1, -octaves(2), TModulation::F2_CUTOFF });
-
-    Modulations.push_back( { TModulation::MODWHEEL, -2.0, TModulation::OSC1_LEVEL });
-    Modulations.push_back( { TModulation::MODWHEEL, -2.0, TModulation::OSC2_LEVEL });
-    Modulations.push_back( { TModulation::MODWHEEL, 4.0, TModulation::OSC3_LEVEL });
-
-    Modulations.push_back( { TModulation::BREATH, octaves(-2), TModulation::OSC1_FREQ });
-    Modulations.push_back( { TModulation::BREATH, octaves(-2), TModulation::OSC2_FREQ });
-    Modulations.push_back( { TModulation::BREATH, octaves(-2), TModulation::OSC3_FREQ });
-
-    LfoFrequency[0] = 1.3;
-    Modulations.push_back( { TModulation::LFO1, cents(10), TModulation::OSC1_FREQ });
-    Modulations.push_back( { TModulation::LFO1, cents(-10), TModulation::OSC2_FREQ });
-
-    LfoFrequency[1] = 0.5;
-    Modulations.push_back( { TModulation::LFO2, 0.4, TModulation::OSC1_PAN });
-    Modulations.push_back( { TModulation::LFO2, -0.4, TModulation::OSC2_PAN });
-
-    Effects[0].reset(new TReverbFx);
-    Effects[0]->SetMix(0.25);
-}
-
-/*
- * An attempt to duplicate Blofeld's B003 microQ Plus
- */
-void TProgram::Patch3()
-{
-    Modulations.clear();
-    SetupConstantModulations();
-
-    OscType[0] = OSC_SAW;
-    OscType[1] = OSC_SAW;
-    OscType[2] = OSC_SAW;
-
-    OscSync[0] = false;
-    OscSync[1] = false;
-    OscSync[2] = false;
-
-    Modulations[C_OSC1_OCTAVE].Amount = octaves(-1); // 16'
-    Modulations[C_OSC1_PAN].Amount = -1;
-    Modulations[C_OSC1_DETUNE].Amount = cents(+8 / 64.0 * 100.0);
-    Modulations[C_OSC2_OCTAVE].Amount = octaves(-1); // 16'
-    Modulations[C_OSC2_PAN].Amount = 1;
-    Modulations[C_OSC2_DETUNE].Amount = cents(-8 / 64.0 * 100.0);
-    Modulations[C_OSC3_OCTAVE].Amount = octaves(-1); // 16'
-    Modulations[C_OSC3_PAN].Amount = 0;
-    Modulations[C_OSC3_DETUNE].Amount = cents(0);
-
-    // Bass boost
-    Modulations.push_back( { TModulation::KEY, -0.2, TModulation::OSC1_LEVEL });
-    Modulations.push_back( { TModulation::KEY, -0.2, TModulation::OSC2_LEVEL });
-    Modulations.push_back( { TModulation::KEY, -0.2, TModulation::OSC3_LEVEL });
-
-    OscLevel[0] = 1.0f;
-    OscLevel[1] = 1.0f;
-    OscLevel[2] = 1.0f;
-
-    Modulations.push_back( { TModulation::BREATH, octaves(-1), TModulation::OSC1_FREQ });
-    Modulations.push_back( { TModulation::BREATH, octaves(-1), TModulation::OSC2_FREQ });
-    Modulations.push_back( { TModulation::BREATH, octaves(-1), TModulation::OSC3_FREQ });
-
-    Modulations[C_F1_PAN].Amount = -1;
-    Modulations[C_F2_PAN].Amount = 1;
-
-    // F1: PPG LP, cutoff 25 (49Hz), resonance 43, env velocity: 28
-    // F2: PPG LP, cutoff 24 (46Hz), resonance 41, env velocity: 28
-    FilterCutoff[0] = 49;
-    FilterCutoff[1] = 46;
-    FilterResonance[0] = 0.3;
-    FilterResonance[1] = 0.3;
-    Modulations.push_back( { TModulation::EG1_TIMES_VELO, octaves(8), TModulation::F1_CUTOFF });
-    Modulations.push_back( { TModulation::EG1_TIMES_VELO, octaves(8), TModulation::F2_CUTOFF });
-
-    Modulations.push_back( { TModulation::MODWHEEL, octaves(6), TModulation::F1_CUTOFF });
-    Modulations.push_back( { TModulation::MODWHEEL, octaves(6), TModulation::F2_CUTOFF });
-
-    WaveShaper[0] = 0.0;
-    WaveShaper[1] = 0.0;
-    LfoFrequency[0] = 1;
-    LfoFrequency[1] = 1;
-    Envelope[0] = {Attack: 10, Decay: 0, Sustain: 1.0, Release: 30};
-    Envelope[1] = {Attack: 100, Decay: 3000, Sustain: 31/127.0f, Release: 40};
-
-    TDelayFx* fx = new TDelayFx();
-    fx->SetDelay(250);
-    fx->SetFeedback(0.4);
-    fx->SetDistortion(0.1);
     Effects[0].reset(fx);
     Effects[0]->SetMix(0.5);
 }
