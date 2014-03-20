@@ -1,7 +1,7 @@
-CCFLAGS=-g -Wall -O2 -std=c++11 `pkg-config --cflags jack sndfile jsoncpp` -Weffc++
-#CCFLAGS+=-fno-exceptions -fno-rtti
-#CCFLAGS+=-Winline
-LDFLAGS=-lm `pkg-config --libs jack sndfile gig jsoncpp` -lrt
+CCFLAGS := -g -Wall -O2 -std=c++0x $(shell pkg-config --cflags jack sndfile jsoncpp gig) -Weffc++
+#CCFLAGS += -fno-exceptions -fno-rtti
+#CCFLAGS += -Winline
+LDFLAGS := -lm $(shell pkg-config --libs jack sndfile gig jsoncpp) -lrt
 
 EXE = jacksynth
 all: $(EXE)
@@ -82,7 +82,7 @@ showbleps: minBLEP/minblep
 	minBLEP/minblep --zerocrossings 32 --oversampling 32 --type minblep > minBLEP/data.txt
 	octave --persist minBLEP/illustration.m
 
-src/minblep.h: minBLEP/minblep Makefile
+src/minblep.h: minBLEP/minblep
 	minBLEP/minblep --zerocrossings 32 --oversampling 64 --header --type minblep > $@
 
 .PHONY: testspec showbleps
