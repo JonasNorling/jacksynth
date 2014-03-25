@@ -24,13 +24,15 @@ public:
     };
 
     TEnvelope()
-            : State(IDLE), Value(0), SampleCounter(0), ReleaseValue(0), A(0), D(
-                    0), S(0), R(0)
+            : State(IDLE), Value(0), SampleCounter(0), ReleaseValue(0), A(0), D(0), S(0), R(0)
     {
     }
 
-    void Set(const TSettings& s)
+    void Reset(const TSettings& s)
     {
+        State = IDLE;
+        SampleCounter = 0;
+        ReleaseValue = 0;
         A = s.Attack * TGlobal::SampleRate / 1000.0;
         D = s.Decay * TGlobal::SampleRate / 1000.0;
         S = s.Sustain;

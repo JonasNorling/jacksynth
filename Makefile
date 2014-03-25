@@ -1,4 +1,5 @@
-CCFLAGS := -g -Wall -O2 -std=c++0x $(shell pkg-config --cflags jack sndfile jsoncpp gig) -Weffc++
+CCFLAGS := -g -Wall -O2 -std=c++0x $(shell pkg-config --cflags jack sndfile jsoncpp gig)
+#CCFLAGS += -Weffc++
 #CCFLAGS += -fno-exceptions -fno-rtti
 #CCFLAGS += -Winline
 LDFLAGS := -lm $(shell pkg-config --libs jack sndfile gig jsoncpp) -lrt

@@ -127,6 +127,7 @@ public:
 
     void SetupConstantModulations();
 
+    TVoice* AllocateVoice();
     void NoteOn(TUnsigned7 note, TUnsigned7 velocity);
     void NoteOff(TUnsigned7 note, TUnsigned7 velocity);
     void SetController(TUnsigned7 cc, TUnsigned7 value);
@@ -141,12 +142,6 @@ public:
     }
 
 private:
-    struct TSoundingVoice
-    {
-        TUnsigned7 note;
-        std::unique_ptr<TVoice> voice;
-    };
-
     enum TConstantModulations
     {
         C_OSC1_PAN = 0,
@@ -171,12 +166,12 @@ private:
     void Patch4();
     void Patch5();
 
-    float ModulationFactor(TModulation::TDestination d, const TSoundingVoice& voice);
-    float ModulationValue(TModulation::TDestination d, const TSoundingVoice& voice);
+    float ModulationFactor(TModulation::TDestination d, const TVoice& voice);
+    float ModulationValue(TModulation::TDestination d, const TVoice& voice);
 
     int Patch;
 
-    std::list<TSoundingVoice> Voices;
+    std::vector<TVoice> Voices;
     parameter_callback_t ParameterChanged;
 
     TTimer TimerProcess;

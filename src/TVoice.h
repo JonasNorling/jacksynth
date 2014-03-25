@@ -19,9 +19,23 @@ UNCOPYABLE(TVoice)
     ;
 
 public:
-    TVoice(TFrequency hz, TUnsigned7 velocity)
-            : State(PLAYING), Hold(false), Stolen(false), Hz(hz), Velocity(velocity), AmpEg(), FiltEg()
+    TVoice()
+	: State(FINISHED), Hold(false), Stolen(false), Note(0), Hz(0), Velocity(0), AmpEg(), FiltEg()
     {
+    }
+
+    void Reset(TUnsigned7 note, TFrequency hz, TUnsigned7 velocity)
+    {
+	State = PLAYING;
+	Hold = false;
+	Stolen = false;
+	Note = note;
+	Hz = hz;
+	Velocity = velocity;
+
+	Oscillators[0].reset();
+	Oscillators[1].reset();
+	Oscillators[2].reset();
     }
 
     ~TVoice()
@@ -39,6 +53,7 @@ public:
     bool Hold; // Note is held by sostenuto pedal
     bool Stolen; // This voice has been killed off to make place for a new one
 
+    TUnsigned7 Note;
     TFrequency Hz;
     TUnsigned7 Velocity;
 

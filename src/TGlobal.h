@@ -18,6 +18,7 @@ const int HzE3 = 330;
 const int MidiChannels = 16;
 
 const unsigned SoftVoiceLimit = 16;
+const unsigned HardVoiceLimit = 24;
 
 const int Oscillators = 3;
 const int Filters = 2;

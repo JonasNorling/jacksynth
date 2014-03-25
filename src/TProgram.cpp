@@ -24,7 +24,7 @@ TGigInstrument TProgram::GigInstrument("/home/jonas/gigas/maestro_concert_grand_
 
 TProgram::TProgram(int patch)
 : Patch(patch),
-  Voices(),
+  Voices(TGlobal::HardVoiceLimit),
   ParameterChanged(0),
   TimerProcess("Process"),
   TimerUpdates("Updates"),
@@ -498,8 +498,12 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
 
     for (jack_nframes_t sampleno = 0; sampleno < framelen; sampleno += subframelen) {
         TimerUpdates.Start();
-        for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
-            TVoice* v = voice->voice.get();
+        for (TVoice& voice: Voices) {
+            TVoice* v = &voice;
+            if (v->State == TVoice::TState::FINISHED) {
+                continue;
+            }
+
             // Step LFOs and envelopes
             v->FiltEg.Step(subframelen);
             v->Lfos[0].SetFrequency(LfoFrequency[0]);
@@ -523,27 +527,27 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
             v->Oscillators[0]->SetState(v->AmpEg.GetState());
             v->Oscillators[1]->SetState(v->AmpEg.GetState());
             v->Oscillators[2]->SetState(v->AmpEg.GetState());
-            v->Oscillators[0]->SetFrequency(key_hz * ModulationFactor(TModulation::OSC1_FREQ, *voice));
-            v->Oscillators[1]->SetFrequency(key_hz * ModulationFactor(TModulation::OSC2_FREQ, *voice));
-            v->Oscillators[2]->SetFrequency(key_hz * ModulationFactor(TModulation::OSC3_FREQ, *voice));
-            v->Oscillators[0]->SetPulseWidth(OscPw[0] * ModulationFactor(TModulation::OSC1_PW, *voice));
-            v->Oscillators[1]->SetPulseWidth(OscPw[1] * ModulationFactor(TModulation::OSC2_PW, *voice));
-            v->Oscillators[2]->SetPulseWidth(OscPw[2] * ModulationFactor(TModulation::OSC3_PW, *voice));
+            v->Oscillators[0]->SetFrequency(key_hz * ModulationFactor(TModulation::OSC1_FREQ, *v));
+            v->Oscillators[1]->SetFrequency(key_hz * ModulationFactor(TModulation::OSC2_FREQ, *v));
+            v->Oscillators[2]->SetFrequency(key_hz * ModulationFactor(TModulation::OSC3_FREQ, *v));
+            v->Oscillators[0]->SetPulseWidth(OscPw[0] * ModulationFactor(TModulation::OSC1_PW, *v));
+            v->Oscillators[1]->SetPulseWidth(OscPw[1] * ModulationFactor(TModulation::OSC2_PW, *v));
+            v->Oscillators[2]->SetPulseWidth(OscPw[2] * ModulationFactor(TModulation::OSC3_PW, *v));
             v->Oscillators[0]->SetSync(OscSync[0]);
             v->Oscillators[1]->SetSync(OscSync[1]);
             v->Oscillators[2]->SetSync(OscSync[2]);
-            v->OscPan[0].SetPan(OscLevel[0] * ModulationFactor(TModulation::OSC1_LEVEL, *voice),
-                    ModulationValue(TModulation::OSC1_PAN, *voice));
-            v->OscPan[1].SetPan(OscLevel[1] * ModulationFactor(TModulation::OSC2_LEVEL, *voice),
-                    ModulationValue(TModulation::OSC2_PAN, *voice));
-            v->OscPan[2].SetPan(OscLevel[2] * ModulationFactor(TModulation::OSC3_LEVEL, *voice),
-                    ModulationValue(TModulation::OSC3_PAN, *voice));
-            v->Filters[0].SetCutoff(FilterCutoff[0] * ModulationFactor(TModulation::F1_CUTOFF, *voice));
-            v->Filters[1].SetCutoff(FilterCutoff[1] * ModulationFactor(TModulation::F2_CUTOFF, *voice));
-            v->Filters[0].SetResonance(FilterResonance[0] * ModulationFactor(TModulation::F1_RESONANCE, *voice));
-            v->Filters[1].SetResonance(FilterResonance[1] * ModulationFactor(TModulation::F1_RESONANCE, *voice));
-            v->FiltPan[0].SetPan(1.0, ModulationValue(TModulation::F1_PAN, *voice));
-            v->FiltPan[1].SetPan(1.0, ModulationValue(TModulation::F2_PAN, *voice));
+            v->OscPan[0].SetPan(OscLevel[0] * ModulationFactor(TModulation::OSC1_LEVEL, *v),
+                    ModulationValue(TModulation::OSC1_PAN, *v));
+            v->OscPan[1].SetPan(OscLevel[1] * ModulationFactor(TModulation::OSC2_LEVEL, *v),
+                    ModulationValue(TModulation::OSC2_PAN, *v));
+            v->OscPan[2].SetPan(OscLevel[2] * ModulationFactor(TModulation::OSC3_LEVEL, *v),
+                    ModulationValue(TModulation::OSC3_PAN, *v));
+            v->Filters[0].SetCutoff(FilterCutoff[0] * ModulationFactor(TModulation::F1_CUTOFF, *v));
+            v->Filters[1].SetCutoff(FilterCutoff[1] * ModulationFactor(TModulation::F2_CUTOFF, *v));
+            v->Filters[0].SetResonance(FilterResonance[0] * ModulationFactor(TModulation::F1_RESONANCE, *v));
+            v->Filters[1].SetResonance(FilterResonance[1] * ModulationFactor(TModulation::F1_RESONANCE, *v));
+            v->FiltPan[0].SetPan(1.0, ModulationValue(TModulation::F1_PAN, *v));
+            v->FiltPan[1].SetPan(1.0, ModulationValue(TModulation::F2_PAN, *v));
         }
         TimerUpdates.Stop();
 
@@ -570,8 +574,10 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
 
         TimerSamples.Start();
         // Generate audio samples for left and right channel
-        for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
-            TVoice* v = voice->voice.get();
+        for (TVoice& voice: Voices) {
+            if (voice.State == TVoice::FINISHED) {
+                continue;
+            }
 
             bufFilter[0].Clear();
             bufFilter[1].Clear();
@@ -583,8 +589,8 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
             hardsync.Clear();
             for (int i = 0; i < TGlobal::Oscillators; i++) {
                 bufOscillator.Clear();
-                v->Oscillators[i]->Process(bufIn[0], bufOscillator, hardsync, hardsync);
-                v->OscPan[i].Process(bufOscillator, bufFilter[0], bufFilter[1]);
+                voice.Oscillators[i]->Process(bufIn[0], bufOscillator, hardsync, hardsync);
+                voice.OscPan[i].Process(bufOscillator, bufFilter[0], bufFilter[1]);
                 into1.AddSamples(bufFilter[0]); // All oscillators going to filter 1
                 into2.AddSamples(bufFilter[1]); // All oscillators going to filter 2
             }
@@ -592,9 +598,9 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
             // Add distortion to the signal going to the filters in place,
             // render filters in place, pan filters to left and right channels
             for (int i = 0; i < TGlobal::Filters; i++) {
-                v->WaveShaper[i].Process(bufFilter[i], bufFilter[i]);
-                v->Filters[i].Process(bufFilter[i], bufFilter[i]);
-                v->FiltPan[i].Process(bufFilter[i], bufChannel[0], bufChannel[1]);
+        	voice.WaveShaper[i].Process(bufFilter[i], bufFilter[i]);
+        	voice.Filters[i].Process(bufFilter[i], bufFilter[i]);
+        	voice.FiltPan[i].Process(bufFilter[i], bufChannel[0], bufChannel[1]);
             }
 
             into3.AddSamples(bufFilter[0]); // All oscillators filter 1 output
@@ -604,9 +610,9 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
             // FIXME: shouldn't the amp envelope be applied before filter, distortion,
             // etc? That would make for a more dynamic sound, and it would be saner.
             for (jack_nframes_t j = 0; j < subframelen; j++) {
-                v->AmpEg.Step(1);
-                bufProgramSlice[0][j] += bufChannel[0][j] * v->Velocity / 128.0 * v->AmpEg.GetValue();
-                bufProgramSlice[1][j] += bufChannel[1][j] * v->Velocity / 128.0 * v->AmpEg.GetValue();
+        	voice.AmpEg.Step(1);
+                bufProgramSlice[0][j] += bufChannel[0][j] * voice.Velocity / 128.0 * voice.AmpEg.GetValue();
+                bufProgramSlice[1][j] += bufChannel[1][j] * voice.Velocity / 128.0 * voice.AmpEg.GetValue();
             }
         }
         TimerSamples.Stop();
@@ -634,13 +640,6 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
     out[0]->AddSamples(bufProgram[0]);
     out[1]->AddSamples(bufProgram[1]);
 
-    for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
-        if (voice->voice->State == TVoice::TState::FINISHED) {
-            Voices.erase(voice);
-            break;
-        }
-    }
-
     if (!sounding) {
         sounding = out[0]->PeakAmplitude() > TGlobal::OscAmplitude * 0.01 ||
                 out[1]->PeakAmplitude() > TGlobal::OscAmplitude * 0.01;
@@ -651,27 +650,27 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
     return sounding;
 }
 
-inline float TProgram::ModulationFactor(TModulation::TDestination d, const TSoundingVoice& voice)
+inline float TProgram::ModulationFactor(TModulation::TDestination d, const TVoice& voice)
 {
     float mod = ModulationValue(d, voice);
     return mod != 0 ? fpow2(mod) : 1;
     //return mod != 0 ? exp2f(mod) : 1;
 }
 
-inline float TProgram::ModulationValue(TModulation::TDestination d, const TSoundingVoice& voice)
+inline float TProgram::ModulationValue(TModulation::TDestination d, const TVoice& voice)
 {
     float mod = 0;
     for (const TModulation& m: Modulations) {
         if (m.Destination == d) {
             switch (m.Source) {
             case TModulation::CONSTANT: mod += m.Amount; break;
-            case TModulation::KEY: mod += m.Amount * semitones(voice.note - TGlobal::MidiNoteE3); break;
+            case TModulation::KEY: mod += m.Amount * semitones(voice.Note - TGlobal::MidiNoteE3); break;
             case TModulation::PITCHBEND: mod += m.Amount * PitchBend; break;
-            case TModulation::LFO1: mod += m.Amount * voice.voice->Lfos[0].GetValue(); break;
-            case TModulation::LFO2: mod += m.Amount * voice.voice->Lfos[1].GetValue(); break;
-            case TModulation::EG1: mod += m.Amount * voice.voice->FiltEg.GetValue(); break;
-            case TModulation::VELOCITY: mod += m.Amount * voice.voice->Velocity/128.0; break;
-            case TModulation::EG1_TIMES_VELO: mod += m.Amount * voice.voice->FiltEg.GetValue() * voice.voice->Velocity/128.0f; break;
+            case TModulation::LFO1: mod += m.Amount * voice.Lfos[0].GetValue(); break;
+            case TModulation::LFO2: mod += m.Amount * voice.Lfos[1].GetValue(); break;
+            case TModulation::EG1: mod += m.Amount * voice.FiltEg.GetValue(); break;
+            case TModulation::VELOCITY: mod += m.Amount * voice.Velocity/128.0; break;
+            case TModulation::EG1_TIMES_VELO: mod += m.Amount * voice.FiltEg.GetValue() * voice.Velocity/128.0f; break;
             case TModulation::MODWHEEL: mod += m.Amount * ModWheel; break;
             case TModulation::BREATH: mod += m.Amount * Breath; break;
             }
@@ -680,14 +679,53 @@ inline float TProgram::ModulationValue(TModulation::TDestination d, const TSound
     return mod;
 }
 
+TVoice* TProgram::AllocateVoice()
+{
+    size_t count = 0;
+    TVoice* voice = NULL;
+
+    for (size_t i = 0; i < Voices.size(); i++) {
+	if (voice == NULL && Voices[i].State == TVoice::TState::FINISHED) {
+	    voice = &Voices[i];
+	}
+	count += Voices[i].State != TVoice::TState::FINISHED ? 1 : 0;
+    }
+
+    if (count > TGlobal::SoftVoiceLimit) {
+        fprintf(stderr, "Now %zu voices\n", count);
+
+        // Steal an old voice
+        // FIXME: Implement!
+        /*
+        for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
+            if (!voice->voice->Stolen) {
+                if (voice->voice->AmpEg.GetState() < TEnvelope::RELEASE) {
+                    voice->voice->State = TVoice::TState::RELEASED;
+                    voice->voice->AmpEg.Release(64);
+                    voice->voice->FiltEg.Release(64);
+                }
+                voice->voice->Stolen = true;
+                break;
+            }
+        }
+        */
+    }
+
+    return voice;
+}
+
 void TProgram::NoteOn(TUnsigned7 note, TUnsigned7 velocity)
 {
-    float hz = NOTE2HZ(note);
-    TVoice* voice = new TVoice(hz, velocity);
+    TVoice* voice = AllocateVoice();
+    if (!voice) {
+	fprintf(stderr, "Too many voices\n");
+	return;
+    }
 
-    TNoteData noteData;
-    noteData.Note = note;
-    noteData.Velocity = velocity;
+    float hz = NOTE2HZ(note);
+    voice->Reset(note, hz, velocity);
+
+    TNoteData noteData({ Note: note, Velocity: velocity });
 
     for (int i = 0; i < TGlobal::Oscillators; i++) {
         switch (OscType[i]) {
@@ -726,44 +764,26 @@ void TProgram::NoteOn(TUnsigned7 note, TUnsigned7 velocity)
         }
     }
 
-    voice->AmpEg.Set(Envelope[0]);
-    voice->FiltEg.Set(Envelope[1]);
-    Voices.push_back( { note, std::unique_ptr<TVoice>(voice) });
-
-    if (Voices.size() > TGlobal::SoftVoiceLimit) {
-        fprintf(stderr, "Now %zu voices\n", Voices.size());
-
-        // Steal an old voice
-        for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
-            if (!voice->voice->Stolen) {
-                if (voice->voice->AmpEg.GetState() < TEnvelope::RELEASE) {
-                    voice->voice->State = TVoice::TState::RELEASED;
-                    voice->voice->AmpEg.Release(64);
-                    voice->voice->FiltEg.Release(64);
-                }
-                voice->voice->Stolen = true;
-                break;
-            }
-        }
-    }
+    voice->AmpEg.Reset(Envelope[0]);
+    voice->FiltEg.Reset(Envelope[1]);
 }
 
 void TProgram::NoteOff(TUnsigned7 note, TUnsigned7 velocity)
 {
-    for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
-        if (voice->note == note) {
-            if (voice->voice->AmpEg.GetState() < TEnvelope::RELEASE) {
-                if (voice->voice->Hold) {
+    for (TVoice& voice: Voices) {
+        if (voice.State != TVoice::TState::FINISHED && voice.Note == note) {
+            if (voice.AmpEg.GetState() < TEnvelope::RELEASE) {
+                if (voice.Hold) {
                     // Held by sostenuto pedal; don't release
-                    voice->voice->State = TVoice::TState::RELEASED;
+                    voice.State = TVoice::TState::RELEASED;
                 }
                 else if (Sustain == 0) {
-                    voice->voice->State = TVoice::TState::RELEASED;
-                    voice->voice->AmpEg.Release(velocity);
-                    voice->voice->FiltEg.Release(velocity);
+                    voice.State = TVoice::TState::RELEASED;
+                    voice.AmpEg.Release(velocity);
+                    voice.FiltEg.Release(velocity);
                 }
                 else {
-                    voice->voice->State = TVoice::TState::SUSTAINED;
+                    voice.State = TVoice::TState::SUSTAINED;
                 }
             }
         }
@@ -785,11 +805,11 @@ void TProgram::SetController(TUnsigned7 cc, TUnsigned7 value)
         Sustain = value;
         if (Sustain == 0) {
             // Release any sustained notes
-            for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
-                if (voice->voice->State == TVoice::TState::SUSTAINED) {
-                    voice->voice->State = TVoice::TState::RELEASED;
-                    voice->voice->AmpEg.Release(0x40);
-                    voice->voice->FiltEg.Release(0x40);
+            for (TVoice& voice: Voices) {
+                if (voice.State == TVoice::TState::SUSTAINED) {
+                    voice.State = TVoice::TState::RELEASED;
+                    voice.AmpEg.Release(0x40);
+                    voice.FiltEg.Release(0x40);
                 }
             }
         }
@@ -802,24 +822,24 @@ void TProgram::SetController(TUnsigned7 cc, TUnsigned7 value)
 
         if (value == 0) {
             // Release all currently latched notes
-            for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
-                if (voice->voice->Hold) {
-                    voice->voice->Hold = false;
-                    if (voice->voice->State == TVoice::TState::RELEASED && Sustain == 0) {
-                        voice->voice->AmpEg.Release(0x40);
-                        voice->voice->FiltEg.Release(0x40);
+            for (TVoice& voice: Voices) {
+                if (voice.State != TVoice::TState::FINISHED && voice.Hold) {
+                    voice.Hold = false;
+                    if (voice.State == TVoice::TState::RELEASED && Sustain == 0) {
+                        voice.AmpEg.Release(0x40);
+                        voice.FiltEg.Release(0x40);
                     }
                     else if (Sustain) {
-                        voice->voice->State = TVoice::TState::SUSTAINED;
+                        voice.State = TVoice::TState::SUSTAINED;
                     }
                 }
             }
         }
         else {
             // Latch all currently held notes
-            for (auto voice = Voices.begin(); voice != Voices.end(); voice++) {
-                if (voice->voice->State == TVoice::TState::PLAYING) {
-                    voice->voice->Hold = true;
+            for (TVoice& voice: Voices) {
+                if (voice.State == TVoice::TState::PLAYING) {
+                    voice.Hold = true;
                 }
             }
         }
