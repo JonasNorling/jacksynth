@@ -28,12 +28,12 @@ SRCS += src/liir.cpp
 SRCS += src/main.cpp
 SRCS += src/util.cpp
 
-OBJS = $(SRCS:src/%.cpp=build/%.o)
+OBJS := $(patsubst src/%.cpp,build/%.o,$(SRCS))
 
--include deps.mk
+-include $(patsubst %.o,%.d,$(OBJS))
 
 clean:
-	rm -f $(EXE) $(OBJS) deps.mk
+	rm -f $(EXE) $(OBJS)
 	rm -rf build
 	rm -f src/minblep.h
 
@@ -44,7 +44,7 @@ $(EXE): $(OBJS)
 build/%.o: src/%.cpp
 	@echo $< --\> $@
 	@mkdir -p build
-	@$(CXX) -c -o $@ $< $(CCFLAGS)
+	@$(CXX) -MMD -c -o $@ $< $(CCFLAGS)
 
 deps.mk: $(SRCS) $(TEST_SRCS) src/minblep.h
 	@echo --\> $@
