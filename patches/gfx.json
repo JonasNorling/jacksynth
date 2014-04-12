@@ -1,0 +1,21 @@
+// Program patch file
+//
+// Musical pitch values are given in octaves. The format supports a floating point number
+// of octaves or a string format in octaves, semitones (1/12 octave) or cents (1/100 semitone):
+// "1o", "1s" and "1c" respectively.
+//
+
+{
+	"name": "Guitar FX box",
+
+	// Type of program.
+	// program: subtractive
+	"program": "effect",
+
+	"input-level": 3.0,
+
+	// Effects
+	"fx": [
+		{ "type": "delay", "mix": 0.5, "delay": 500, "feedback": 0.6, "distortion": 0.2,
+			"lfo": { "depth": 10, "speed": 0.3, "phase": 0.6 } } ]
+}

@@ -29,6 +29,15 @@ TProgram::TProgram(int patch)
   TimerProcess("Process"),
   TimerUpdates("Updates"),
   TimerSamples("Samples"),
+  FilterCutoff{0},
+  FilterResonance{0},
+  LfoFrequency{0},
+  OscType{OSC_OFF},
+  OscSync{false},
+  OscPw{0},
+  OscLevel{0},
+  WaveShaper{0},
+  Envelope{0},
   InputToEffectsMix(0),
   PitchBend(0),
   ModWheel(0),
@@ -38,12 +47,12 @@ TProgram::TProgram(int patch)
   Modulations()
 {
     switch (Patch % 6) {
-    case 0: Patch0(); break;
-    case 1: Patch1(); break;
+    case 0: LoadFromFile("patches/0.json"); break;
+    case 1: LoadFromFile("patches/1.json"); break;
     case 2: LoadFromFile("patches/2.json"); break;
-    case 3: LoadFromFile("patches/3.json"); break;
-    case 4: Patch4(); break;
-    case 5: Patch5(); break;
+    case 3: LoadFromFile("patches/microQ.json"); break;
+    case 4: LoadFromFile("patches/gig.json"); break;
+    case 5: LoadFromFile("patches/gfx.json"); break;
     }
 }
 
@@ -51,10 +60,10 @@ TProgram::~TProgram()
 {
 }
 
-float TProgram::JsonParsePitch(const Json::Value& value)
+float TProgram::JsonParsePitch(const Json::Value& value, float def)
 {
     if (value.isNull()) {
-        return 0.0f;
+        return def;
     }
     else if (value.isConvertibleTo(Json::realValue)) {
         return value.asFloat();
@@ -69,7 +78,7 @@ float TProgram::JsonParsePitch(const Json::Value& value)
             case 'c': return cents(v);
         }
     }
-    return 0.0f;
+    return def;
 }
 
 TOscType TProgram::JsonParseOscillatorType(const Json::Value& value)
@@ -159,6 +168,9 @@ bool TProgram::LoadFromFile(std::string filename)
 
     printf("Loading %s program: %s\n", program.c_str(), name.c_str());
 
+    // Load input (feedthrough) mixin level
+    InputToEffectsMix = root["input-level"].asFloat();
+
     // Load oscillator settings
     {
         struct {
@@ -180,7 +192,7 @@ bool TProgram::LoadFromFile(std::string filename)
 
             settings[i].detune = JsonParsePitch(osc["detune"]);
             settings[i].octave = JsonParsePitch(osc["octave"]);
-            settings[i].pb = JsonParsePitch(osc["pb"]);
+            settings[i].pb = JsonParsePitch(osc["pb"], semitones(2));
             settings[i].pan = osc["pan"].asFloat();
         }
 
@@ -306,178 +318,6 @@ void TProgram::SetupConstantModulations()
 
     Modulations[C_F1_PAN] = {TModulation::CONSTANT, 0, TModulation::F1_PAN};
     Modulations[C_F2_PAN] = {TModulation::CONSTANT, 0, TModulation::F2_PAN};
-}
-
-void TProgram::Patch0()
-{
-    Modulations.clear();
-    SetupConstantModulations();
-
-    OscType[0] = OSC_SAW;
-    OscType[1] = OSC_SAW;
-    OscType[2] = OSC_OFF;
-
-    OscPw[0] = 0;
-    OscPw[1] = 0;
-    OscPw[2] = 0;
-
-    OscSync[0] = false;
-    OscSync[1] = false;
-    OscSync[2] = false;
-
-    OscLevel[0] = 0.0;
-    OscLevel[1] = 1.0;
-    OscLevel[2] = 0.0;
-
-    WaveShaper[0] = 0.0;
-    WaveShaper[1] = 0.0;
-    LfoFrequency[0] = 1;
-    LfoFrequency[1] = 1;
-    FilterCutoff[0] = 20000;
-    FilterCutoff[1] = 20000;
-    FilterResonance[0] = 0.15;
-    FilterResonance[1] = 0.15;
-    Envelope[0] = {Attack: 20, Decay: 0, Sustain: 1.0, Release: 20};
-    Envelope[1] = {Attack: 20, Decay: 0, Sustain: 1.0, Release: 20};
-
-    Effects[0].reset();
-}
-
-void TProgram::Patch1()
-{
-    Modulations.clear();
-    SetupConstantModulations();
-    // Oscillators start out at the key's frequency, modulations are
-    // applied multiplicatively to the pitch (i.e. exponentially to the
-    // frequency).
-
-    OscType[0] = OscType[1] = OscType[2] = OSC_SQUARE;
-
-    Modulations[C_OSC1_DETUNE].Amount = cents(10);
-    Modulations[C_OSC2_DETUNE].Amount = cents(-10);
-    Modulations[C_OSC1_PAN].Amount = 1;
-    Modulations[C_OSC2_PAN].Amount = -1;
-    Modulations[C_F1_PAN].Amount = 1;
-    Modulations[C_F2_PAN].Amount = -1;
-
-    Modulations.push_back( { TModulation::LFO1, cents(10), TModulation::OSC1_FREQ });
-    Modulations.push_back( { TModulation::LFO1, cents(10), TModulation::OSC2_FREQ });
-
-    OscPw[0] = 0.5;
-    OscPw[1] = 0.4;
-    OscPw[2] = 0;
-
-    OscSync[0] = false;
-    OscSync[1] = false;
-    OscSync[2] = false;
-
-    OscLevel[0] = 0.5;
-    OscLevel[1] = 0.5;
-    OscLevel[2] = 1.0;
-
-    WaveShaper[0] = 0.0;
-    WaveShaper[1] = 0.0;
-
-    Envelope[0] = {Attack: 20, Decay: 0, Sustain: 1.0, Release: 1000};
-    Envelope[1] = {Attack: 1300, Decay: 1300, Sustain: 0.8, Release: 1000};
-
-    LfoFrequency[0] = 7;
-    LfoFrequency[1] = 0.3;
-
-    Modulations.push_back( { TModulation::LFO2, 1, TModulation::OSC1_PW });
-    Modulations.push_back( { TModulation::LFO2, -1, TModulation::OSC2_PW });
-
-    // Sweep filter based on envelope 1: start out at 100 Hz and follow
-    // the envelope up to 25600 Hz (8 octaves) (which is capped at Fs/2).
-    FilterCutoff[0] = 100;
-    FilterCutoff[1] = 100;
-    FilterResonance[0] = 0.15;
-    FilterResonance[1] = 0.15;
-    Modulations.push_back( { TModulation::EG1, octaves(7), TModulation::F1_CUTOFF });
-    Modulations.push_back( { TModulation::EG1, octaves(7), TModulation::F2_CUTOFF });
-    // 100% keytracking
-    //Modulations.push_back({ TModulation::KEY, octaves(1), TModulation::F1_CUTOFF });
-    // Open up the filter quicker at higher velocities
-    Modulations.push_back( { TModulation::VELOCITY, octaves(5), TModulation::F1_CUTOFF });
-    Modulations.push_back( { TModulation::VELOCITY, octaves(5), TModulation::F2_CUTOFF });
-
-    Modulations.push_back( { TModulation::MODWHEEL, -octaves(7), TModulation::F1_CUTOFF });
-    Modulations.push_back( { TModulation::MODWHEEL, -octaves(7), TModulation::F2_CUTOFF });
-
-    TDelayFx* fx = new TDelayFx();
-    fx->SetDelay(500);
-    fx->SetFeedback(0.5);
-    fx->SetDistortion(0.15);
-    Effects[0].reset(fx);
-    Effects[0]->SetMix(0.5);
-}
-
-/*
- * Gig sample test patch
- */
-void TProgram::Patch4()
-{
-    Modulations.clear();
-    SetupConstantModulations();
-
-    OscType[0] = OSC_GIG;
-    OscType[1] = OSC_OFF;
-    OscType[2] = OSC_OFF;
-
-    OscPw[0] = 0;
-    OscPw[1] = 0;
-    OscPw[2] = 0;
-
-    OscSync[0] = false;
-    OscSync[1] = false;
-    OscSync[2] = false;
-
-    OscLevel[0] = 1.0;
-    OscLevel[1] = 0.0;
-    OscLevel[2] = 0.0;
-
-    WaveShaper[0] = 0.0;
-    WaveShaper[1] = 0.0;
-    LfoFrequency[0] = 1;
-    LfoFrequency[1] = 1;
-    FilterCutoff[0] = 20000;
-    FilterCutoff[1] = 20000;
-    FilterResonance[0] = 0.15;
-    FilterResonance[1] = 0.15;
-    Envelope[0] = {Attack: 5, Decay: 0, Sustain: 1.0, Release: 500};
-    Envelope[1] = {Attack: 20, Decay: 0, Sustain: 1.0, Release: 20};
-
-    Modulations.push_back( { TModulation::BREATH, octaves(-2), TModulation::OSC1_FREQ });
-    Modulations.push_back( { TModulation::MODWHEEL, -octaves(5), TModulation::F1_CUTOFF });
-    Modulations.push_back( { TModulation::MODWHEEL, -octaves(5), TModulation::F2_CUTOFF });
-    Modulations.push_back( { TModulation::MODWHEEL, 4, TModulation::F1_RESONANCE });
-    Modulations.push_back( { TModulation::MODWHEEL, 4, TModulation::F2_RESONANCE });
-
-    TDelayFx* fx = new TDelayFx();
-    fx->SetDelay(100);
-    fx->SetFeedback(0.7);
-    fx->SetDistortion(0.0);
-    Effects[0].reset(fx);
-    Effects[0]->SetMix(0.0);
-}
-
-/**
- * A guitarr effect patch
- */
-void TProgram::Patch5()
-{
-    Modulations.clear();
-    SetupConstantModulations();
-
-    InputToEffectsMix = 3.0f;
-
-    TDelayFx* fx = new TDelayFx();
-    fx->SetDelay(500);
-    fx->SetFeedback(0.6);
-    fx->SetDistortion(0.2);
-    fx->SetLfo(10, 0.3f, 0.6f);
-    Effects[0].reset(fx);
-    Effects[0]->SetMix(0.5);
 }
 
 bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out,

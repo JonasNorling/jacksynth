@@ -109,7 +109,7 @@ UNCOPYABLE(TProgram)
     ;
 
 private:
-    static float JsonParsePitch(const Json::Value& value);
+    static float JsonParsePitch(const Json::Value& value, float def = 0.0f);
     static TOscType JsonParseOscillatorType(const Json::Value& value);
     static TModulation::TSource JsonParseModSource(const Json::Value& value);
     static TModulation::TDestination JsonParseModDestination(const Json::Value& value);
@@ -160,11 +160,6 @@ private:
         C_F2_PAN,
         C_LAST
     };
-
-    void Patch0();
-    void Patch1();
-    void Patch4();
-    void Patch5();
 
     float ModulationFactor(TModulation::TDestination d, const TVoice& voice);
     float ModulationValue(TModulation::TDestination d, const TVoice& voice);

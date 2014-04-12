@@ -42,21 +42,10 @@ $(EXE): $(OBJS)
 	@echo --\> $@
 	@$(CXX) -o $@ $^ $(LDFLAGS)
 
-build/%.o: src/%.cpp
+build/%.o: src/%.cpp src/minblep.h
 	@echo $< --\> $@
 	@mkdir -p build
 	@$(CXX) -MMD -c -o $@ $< $(CCFLAGS)
-
-deps.mk: $(SRCS) $(TEST_SRCS) src/minblep.h
-	@echo --\> $@
-	@rm -f $@
-	@touch deps.mk
-
-	@for s in $(SRCS) $(TEST_SRCS); do \
-		OBJ=`echo $$s | sed 's/src\/\(.*\).cpp/build\/\1.o/'`; \
-		gcc -MT "$$OBJ" -MM $$s $(CCFLAGS) >> $@; \
-	done
-
 
 spectrogramdata1.bin: $(EXE)
 	./$(EXE) --testsignal 1 > $@

@@ -1,0 +1,44 @@
+// Program patch file
+//
+// Musical pitch values are given in octaves. The format supports a floating point number
+// of octaves or a string format in octaves, semitones (1/12 octave) or cents (1/100 semitone):
+// "1o", "1s" and "1c" respectively.
+//
+
+{
+	"name": "Simple saw",
+
+	// Type of program.
+	// program: subtractive
+	"program": "subtractive",
+
+	// Oscillator setup for subtractive synthesis. List of hashes.
+	// type: sine, square, saw, wt, sample, input, gig
+	// level: <fraction>
+	// detune: <pitch>
+	// octave: <pitch>
+	// pan: -1 .. 1 -- pan to filter 1 or 2
+	// pb: <pitch> -- amount of pitch bend
+	"oscs": [
+		{ "type": "saw", "level": 0.0 },
+		{ "type": "saw", "level": 1.0 } ],
+
+	// LFO setup
+	"lfos": [
+		{ "freq": 1.0 },
+		{ "freq": 1.0 } ],
+
+	// Filter setup for subtractive synthesis. List of hashes.
+	//
+	// pan: -1 .. 1 -- pan to L and R channel
+	"filters": [
+		{ "cutoff": 20000, "resonance": 0.15 },
+		{ "cutoff": 20000, "resonance": 0.15 } ],
+	
+	// ADSR envelope setup. List of hashes. Units in ms and fractions.
+	// First env is for amplifier (VCA)
+	// Second env is for filter
+	"envs": [
+		{ "attack": 20, "decay": 0, "sustain": 1.0, "release": 20 },
+		{ "attack": 20, "decay": 0, "sustain": 1.0, "release": 20 } ]
+}
