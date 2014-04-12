@@ -143,7 +143,7 @@ void testSignalFilterSweep(TJackSynth& synth)
     synth.Process(int(0.5*44100) & ~0x7);
 }
 
-void runInJack()
+void runInJack(bool connectAudio, std::vector<std::string> midiConnections)
 {
     Client = jack_client_open("jacksynth", JackNullOption, 0);
     if (!Client) {
@@ -167,10 +167,10 @@ void runInJack()
     TJackAudioPort intOutPort4("int4", Client, TJackAudioPort::OUTPUT);
 
     MidiIn = jack_port_register(Client, "MIDI-IN",
-    JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
+            JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
 
     MidiOut = jack_port_register(Client, "MIDI-OUT",
-    JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
+            JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
 
     TGlobal::SampleRate = jack_get_sample_rate(Client);
     TGlobal::NyquistFrequency = TGlobal::SampleRate / 2;
@@ -188,6 +188,18 @@ void runInJack()
         abort();
     }
 
+    if (connectAudio) {
+        inputPortL.Connect("system:capture_1");
+        inputPortR.Connect("system:capture_2");
+        outputPortL.Connect("system:playback_1");
+        outputPortR.Connect("system:playback_2");
+    }
+
+    for (auto con : midiConnections) {
+        const char* me = jack_port_name(MidiIn);
+        jack_connect(Client, con.c_str(), me);
+    }
+
     while (!die)
         sleep(1);
     jack_client_close(Client);
@@ -197,22 +209,36 @@ static void printHelp()
 {
     std::cout << "Usage: jacksynth [<args...>]" << std::endl
             << " Where allowed arguments are:" << std::endl
-            << "   -t, --testsignal <N>   Generate testsignal number N, to stdout"
-            << std::endl << "   -h, --help             Print this help text"
+            << "   -t, --testsignal <N>   Generate testsignal number N, to stdout" << std::endl
+            << "   -C, --connect-audio    Auto-connect audio in and out ports" << std::endl
+            << "   -M, --connect-midi <P> Connect MIDI input to JACK port P" << std::endl
+            << "   -h, --help             Print this help text"
             << std::endl << std::endl;
 }
 
 int main(int argc, char* argv[])
 {
     int testsignal = 0;
+    bool connectAudio = false;
+    std::vector<std::string> midiConnections;
 
-    struct option longopts[] = { { "testsignal", 1, 0, 't' }, { "help",
-            no_argument, 0, 'h' }, { 0, 0, 0, 0 } };
+    struct option longopts[] = {
+            { "testsignal", 1, 0, 't' },
+            { "connect-audio", 0, 0, 'C' },
+            { "connect-midi", 1, 0, 'M' },
+            { "help", no_argument, 0, 'h' },
+            { 0, 0, 0, 0 } };
     int opt;
-    while ((opt = getopt_long(argc, argv, "h", longopts, 0)) != -1) {
+    while ((opt = getopt_long(argc, argv, "t:CM:h", longopts, 0)) != -1) {
         switch (opt) {
         case 't':
             testsignal = atoi(optarg);
+            break;
+        case 'C':
+            connectAudio = true;
+            break;
+        case 'M':
+            midiConnections.push_back(optarg);
             break;
         default:
         case 'h':
@@ -251,7 +277,7 @@ int main(int argc, char* argv[])
     else {
         signal(SIGINT, sigterm);
         signal(SIGTERM, sigterm);
-        runInJack();
+        runInJack(connectAudio, midiConnections);
     }
     return 0;
 }
