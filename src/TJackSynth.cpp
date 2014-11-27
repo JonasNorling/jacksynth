@@ -196,6 +196,9 @@ void TJackSynth::HandleWaldorfSysex(TProgram& program, std::vector<uint8_t> data
 
 void TJackSynth::ParameterChangedCallback(int unit, int param, int value)
 {
+    if (!SendMidi) {
+        return;
+    }
     SendMidi({
         0xf0,
         0x7f,

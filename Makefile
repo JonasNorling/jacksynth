@@ -63,7 +63,7 @@ testspec2: spectrogram.m $(EXE) spectrogramdata2.bin spectrogramdata2.wav
 	octave --persist --eval "filename='spectrogramdata2.bin'" spectrogram.m
 
 testspeed: $(EXE)
-	/usr/bin/time ./$(EXE) --testsignal > /dev/null
+	/usr/bin/time ./$(EXE) --testsignal 2 > /dev/null
 
 minBLEP/minblep: minBLEP/minblep.o minBLEP/main.o
 	$(CXX) -o $@ $^

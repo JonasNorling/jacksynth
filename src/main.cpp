@@ -69,6 +69,9 @@ void testSignalSawSweep(TJackSynth& synth)
     // This code depends on the default patch being a fairly
     // clean saw wave.
 
+    // Program change
+    synth.HandleMidi({0xc0, 0x00});
+
     synth.HandleMidi({0x90, 0, 0x40}); // note 0: 8.18 Hz
     synth.Process(int(0.5*44100) & ~0x7);
     synth.HandleMidi({0x80, 0, 0x40}); // release note
@@ -88,6 +91,9 @@ void testSignalSawSweep(TJackSynth& synth)
 void testSignalFilterSweep(TJackSynth& synth)
 {
     const float speed = 1.001f;
+
+    // Program change
+    synth.HandleMidi({0xc0, 0x00});
 
     int value = 8000;
     synth.HandleMidi({0xf0, 0x7f, PARAM_DISTORTION, 1, hi7(value), lo7(value), 0xf7});

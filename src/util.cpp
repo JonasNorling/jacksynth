@@ -14,7 +14,7 @@ TTimer::~TTimer()
 void TTimer::Log() const
 {
     float max = MaxNs / 1000000.0f;
-    float average = Nanoseconds / Count / 1000000.0f;
+    float average = Nanoseconds / (Count > 0 ? Count : 1) / 1000000.0f;
 
     printf("[Timer] %s: %d invocations, total %u ms, average %.3f ms, max %.3f ms\n",
             Name.c_str(), Count, GetMs(), average, max);
