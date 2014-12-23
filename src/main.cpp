@@ -7,8 +7,8 @@
 #include "TFileAudioPort.h"
 #include "TGlobal.h"
 
-int TGlobal::SampleRate;
-int TGlobal::NyquistFrequency;
+unsigned TGlobal::SampleRate;
+unsigned TGlobal::NyquistFrequency;
 
 jack_client_t* Client;
 jack_port_t* MidiIn;

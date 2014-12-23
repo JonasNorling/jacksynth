@@ -37,7 +37,7 @@ TProgram::TProgram(int patch)
   OscPw{0},
   OscLevel{0},
   WaveShaper{0},
-  Envelope{0},
+  Envelope{{0}, {0}},
   InputToEffectsMix(0),
   PitchBend(0),
   ModWheel(0),
@@ -427,7 +427,7 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
             // Render oscillators and pan them to two buffers for the filters.
             // Hard sync is propagated from one oscillator to the next.
             hardsync.Clear();
-            for (int i = 0; i < TGlobal::Oscillators; i++) {
+            for (unsigned i = 0; i < TGlobal::Oscillators; i++) {
                 bufOscillator.Clear();
                 voice.Oscillators[i]->Process(bufIn[0], bufOscillator, hardsync, hardsync);
                 voice.OscPan[i].Process(bufOscillator, bufFilter[0], bufFilter[1]);
@@ -437,7 +437,7 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
 
             // Add distortion to the signal going to the filters in place,
             // render filters in place, pan filters to left and right channels
-            for (int i = 0; i < TGlobal::Filters; i++) {
+            for (unsigned i = 0; i < TGlobal::Filters; i++) {
         	voice.WaveShaper[i].Process(bufFilter[i], bufFilter[i]);
         	voice.Filters[i].Process(bufFilter[i], bufFilter[i]);
         	voice.FiltPan[i].Process(bufFilter[i], bufChannel[0], bufChannel[1]);
@@ -472,7 +472,7 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
 
     // Render effects (for downmixed voices)
     TSampleBufferCollection programBuffers( { &bufProgram[0], &bufProgram[1] });
-    for (int i = 0; i < TGlobal::Effects; i++) {
+    for (unsigned i = 0; i < TGlobal::Effects; i++) {
         if (Effects[i]) Effects[i]->Process(programBuffers, programBuffers);
     }
 
@@ -567,7 +567,7 @@ void TProgram::NoteOn(TUnsigned7 note, TUnsigned7 velocity)
 
     TNoteData noteData({ Note: note, Velocity: velocity });
 
-    for (int i = 0; i < TGlobal::Oscillators; i++) {
+    for (unsigned i = 0; i < TGlobal::Oscillators; i++) {
         switch (OscType[i]) {
         case OSC_SINE:
             voice->Oscillators[i].reset(new TSineOscillator(noteData));

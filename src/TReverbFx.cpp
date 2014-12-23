@@ -16,20 +16,20 @@ void TReverbFx::Process(TSampleBufferCollection& in, TSampleBufferCollection& ou
     assert(in.size() == 2);
     assert(out.size() == 2);
 
-    const int framesize = in[0]->GetCount();
+    const unsigned framesize = in[0]->GetCount();
 
     TSampleBuffer& inl = *in[0];
     TSampleBuffer& inr = *in[1];
     TSampleBuffer& outl = *out[0];
     TSampleBuffer& outr = *out[1];
 
-    const int maxDelay = 24000;
+    const unsigned maxDelay = 24000;
     static_assert(maxDelay < BufferSize, "fail");
 
     TSample samefeedback = 0.3;
     TSample otherfeedback = 0.2;
 
-    for (int i = 0; i < framesize; i++) {
+    for (unsigned i = 0; i < framesize; i++) {
         Buffer[0][(ReadPos + maxDelay) % BufferSize] = 0.0f;
         Buffer[1][(ReadPos + maxDelay) % BufferSize] = 0.0f;
 
@@ -38,7 +38,7 @@ void TReverbFx::Process(TSampleBufferCollection& in, TSampleBufferCollection& ou
         TSample vr = DcBlocker[1].ProcessOne(LpFilter[1].ProcessOne(
                 inr[i] + samefeedback * Buffer[1][ReadPos] + otherfeedback * Buffer[0][ReadPos]));
 
-        int d = 137;
+        unsigned d = 137;
         while (d < maxDelay) {
             TSample factor = ((d * 4711) % 1337) * (1.0f - (float(d) / maxDelay));
             Buffer[0][(ReadPos + d) % BufferSize] += vl * factor / 6000.0f;
