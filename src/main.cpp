@@ -6,6 +6,7 @@
 #include "TJackSynth.h"
 #include "TFileAudioPort.h"
 #include "TGlobal.h"
+#include "TSpeedTest.h"
 
 unsigned TGlobal::SampleRate;
 unsigned TGlobal::NyquistFrequency;
@@ -149,6 +150,12 @@ void testSignalFilterSweep(TJackSynth& synth)
     synth.Process(int(0.5*44100) & ~0x7);
 }
 
+static void speedTest()
+{
+    TSpeedTest speedTest;
+    speedTest.Run();
+}
+
 void runInJack(bool connectAudio, std::vector<std::string> midiConnections)
 {
     Client = jack_client_open("jacksynth", JackNullOption, 0);
@@ -216,6 +223,7 @@ static void printHelp()
     std::cout << "Usage: jacksynth [<args...>]" << std::endl
             << " Where allowed arguments are:" << std::endl
             << "   -t, --testsignal <N>   Generate testsignal number N, to stdout" << std::endl
+            << "   -s, --speedtest        Run the performance test benchmark" << std::endl
             << "   -C, --connect-audio    Auto-connect audio in and out ports" << std::endl
             << "   -M, --connect-midi <P> Connect MIDI input to JACK port P" << std::endl
             << "   -h, --help             Print this help text"
@@ -225,20 +233,25 @@ static void printHelp()
 int main(int argc, char* argv[])
 {
     int testsignal = 0;
+    bool runSpeedTest = false;
     bool connectAudio = false;
     std::vector<std::string> midiConnections;
 
     struct option longopts[] = {
             { "testsignal", 1, 0, 't' },
+            { "speedtest", 0, 0, 's' },
             { "connect-audio", 0, 0, 'C' },
             { "connect-midi", 1, 0, 'M' },
             { "help", no_argument, 0, 'h' },
             { 0, 0, 0, 0 } };
     int opt;
-    while ((opt = getopt_long(argc, argv, "t:CM:h", longopts, 0)) != -1) {
+    while ((opt = getopt_long(argc, argv, "st:CM:h", longopts, 0)) != -1) {
         switch (opt) {
         case 't':
             testsignal = atoi(optarg);
+            break;
+        case 's':
+            runSpeedTest = true;
             break;
         case 'C':
             connectAudio = true;
@@ -279,6 +292,9 @@ int main(int argc, char* argv[])
             testSignalFilterSweep(synth);
             break;
         }
+    }
+    else if (runSpeedTest) {
+        speedTest();
     }
     else {
         signal(SIGINT, sigterm);

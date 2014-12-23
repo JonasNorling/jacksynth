@@ -1,4 +1,5 @@
 CCFLAGS := -g -Wall -O2 -std=c++0x $(shell pkg-config --cflags jack sndfile jsoncpp gig)
+CCFLAGS += -msse2 -O3 #-fopt-info-vec-optimized
 #CCFLAGS += -Weffc++
 #CCFLAGS += -fno-exceptions -fno-rtti
 #CCFLAGS += -Winline
@@ -23,6 +24,7 @@ SRCS += src/TResonantLpFilter.cpp
 SRCS += src/TReverbFx.cpp
 SRCS += src/TSampleLoader.cpp
 SRCS += src/TSampleOscillator.cpp
+SRCS += src/TSpeedTest.cpp
 SRCS += src/TSvfFilter.cpp
 SRCS += src/TWavetableOscillator.cpp
 SRCS += src/liir.cpp
