@@ -93,7 +93,7 @@ public:
     {
         struct timespec stopTime;
         clock_gettime(CLOCK_MONOTONIC, &stopTime);
-        unsigned ns = (stopTime.tv_sec - StartTime.tv_sec) * 1000000000LL
+        long long unsigned ns = (stopTime.tv_sec - StartTime.tv_sec) * 1000000000LLU
                 + (stopTime.tv_nsec - StartTime.tv_nsec);
         Nanoseconds += ns;
         MaxNs = std::max(MaxNs, ns);
@@ -104,7 +104,7 @@ public:
     }
     unsigned GetMs() const
     {
-        return Nanoseconds / 1000000;
+        return Nanoseconds / 1000000LLU;
     }
 
     void Log() const;
@@ -113,7 +113,7 @@ private:
     std::string Name;
     struct timespec StartTime;
     long long unsigned Nanoseconds;
-    unsigned MaxNs;
+    long long unsigned MaxNs;
     int Count;
 };
 
