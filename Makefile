@@ -1,8 +1,12 @@
-CCFLAGS := -g -Wall -O2 -std=c++0x $(shell pkg-config --cflags jack sndfile jsoncpp gig)
+HAVE_LIBGIG := $(shell pkg-config --exists gig && echo y)
+PKGS := jack sndfile jsoncpp $(if $(HAVE_LIBGIG),gig)
+
+CCFLAGS := -g -Wall -O2 -std=c++0x $(shell pkg-config --cflags $(PKGS))
+CCFLAGS += $(if $(HAVE_LIBGIG),-DHAVE_LIBGIG=1)
 #CCFLAGS += -Weffc++
 #CCFLAGS += -fno-exceptions -fno-rtti
 #CCFLAGS += -Winline
-LDFLAGS := -lm $(shell pkg-config --libs jack sndfile gig jsoncpp) -lrt
+LDFLAGS := -lm $(shell pkg-config --libs $(PKGS))
 
 EXE = jacksynth
 all: $(EXE)
@@ -12,8 +16,10 @@ SRCS += src/TClockRecovery.cpp
 SRCS += src/TDelayFx.cpp
 SRCS += src/TEnvelope.cpp
 SRCS += src/TFileAudioPort.cpp
+ifeq ($(HAVE_LIBGIG),y)
 SRCS += src/TGigInstrument.cpp
 SRCS += src/TGigOscillator.cpp
+endif
 SRCS += src/TJackAudioPort.cpp
 SRCS += src/TJackSynth.cpp
 SRCS += src/TMinBlepPulseOscillator.cpp

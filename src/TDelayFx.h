@@ -48,7 +48,6 @@ public:
 
 private:
     static const size_t BufferSize = 0x40000;
-    static const unsigned DelayCrossFadeLength = 256;
 
     TSample Buffer[2][BufferSize];
     int WritePos;

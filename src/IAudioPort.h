@@ -1,9 +1,12 @@
 /* -*- mode: c++ -*- */
 #pragma once
 
+#include <math.h>
 #include <jack/jack.h>
 #include <algorithm>
 #include <cassert>
+#include <vector>
+
 #include "util.h"
 
 typedef jack_default_audio_sample_t TSample;

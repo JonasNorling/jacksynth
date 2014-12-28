@@ -3,7 +3,9 @@
 
 #include "TBaseEffect.h"
 #include "TSampleLoader.h"
+#ifdef HAVE_LIBGIG
 #include "TGigInstrument.h"
+#endif
 #include "TVoice.h"
 #include "util.h"
 
@@ -84,7 +86,9 @@ enum TOscType
     OSC_WT = 4,
     OSC_SAMPLE = 5,
     OSC_INPUT = 6,
+#ifdef HAVE_LIBGIG
     OSC_GIG = 7,
+#endif
 };
 
 /*
@@ -195,7 +199,9 @@ private:
     THysteresis<float> QuarterNoteTime;
 
     static TSampleLoader SampleLoader;
+#ifdef HAVE_LIBGIG
     static TGigInstrument GigInstrument;
+#endif
     std::unique_ptr<TBaseEffect> Effects[TGlobal::Effects];
 
     std::vector<TModulation> Modulations;

@@ -1,6 +1,7 @@
 /* -*- mode: c++ -*- */
 #pragma once
 
+#include <sys/time.h>
 #include <cstdint>
 #include <string>
 #include <time.h>
@@ -68,7 +69,11 @@ static inline float fpow2(const float y)
 // Map 0..127 to 1..17696 Hz
 //#define VAL2HZ_HI(n) exp2f(n/9.0f)
 // Map 0..127 to 12..17955 Hz, same scale as Blofeld
+#ifdef __MACH__
+#define VAL2HZ_HI(n) (12*__exp10f(n/40.0f))
+#else
 #define VAL2HZ_HI(n) (12*exp10f(n/40.0f))
+#endif
 // Map 0..127 to 0.19..1261 Hz
 #define VAL2HZ_LO(n) exp2f((n-24)/12.0f)
 // Map 0..127 to 0.35..21247 ms
@@ -87,12 +92,26 @@ public:
     void Start()
     {
         Count++;
+#ifdef __MACH__
+        struct timeval now;
+        gettimeofday(&now, NULL);
+        StartTime.tv_sec = now.tv_sec;
+        StartTime.tv_nsec = now.tv_usec * 1000;
+#else
         clock_gettime(CLOCK_MONOTONIC, &StartTime);
+#endif
     }
     void Stop()
     {
         struct timespec stopTime;
+#ifdef __MACH__
+        struct timeval now;
+        gettimeofday(&now, NULL);
+        stopTime.tv_sec = now.tv_sec;
+        stopTime.tv_nsec = now.tv_usec * 1000;
+#else
         clock_gettime(CLOCK_MONOTONIC, &stopTime);
+#endif
         long long unsigned ns = (stopTime.tv_sec - StartTime.tv_sec) * 1000000000LLU
                 + (stopTime.tv_nsec - StartTime.tv_nsec);
         Nanoseconds += ns;

@@ -1,6 +1,8 @@
 #include "TGlobal.h"
 #include "TDelayFx.h"
+#ifdef HAVE_LIBGIG
 #include "TGigOscillator.h"
+#endif
 #include "TInputOscillator.h"
 #include "TMinBlepPulseOscillator.h"
 #include "TMinBlepSawOscillator.h"
@@ -17,10 +19,12 @@
 #include <fstream>
 
 TSampleLoader TProgram::SampleLoader("sample.ogg");
+#ifdef HAVE_LIBGIG
 TGigInstrument TProgram::GigInstrument("/home/jonas/gigas/maestro_concert_grand_v2.gig");
 //TGigInstrument TProgram::GigInstrument("/home/jonas/gigas/BeeThree.gig");
 //TGigInstrument TProgram::GigInstrument("/home/jonas/gigas/MelloBrass.gig");
 //TGigInstrument TProgram::GigInstrument("/home/jonas/gigas/Worra's Prophet ProphOrg.gig");
+#endif
 
 TProgram::TProgram(int patch)
 : Patch(patch),
@@ -95,7 +99,9 @@ TOscType TProgram::JsonParseOscillatorType(const Json::Value& value)
     else if (type == "wt") return OSC_WT;
     else if (type == "sample") return OSC_SAMPLE;
     else if (type == "input") return OSC_INPUT;
+#ifdef HAVE_LIBGIG
     else if (type == "gig") return OSC_GIG;
+#endif
     else return OSC_OFF;
 }
 
@@ -178,7 +184,7 @@ bool TProgram::LoadFromFile(std::string filename)
             float octave;
             float pb;
             float pan;
-        } settings[TGlobal::Oscillators] = { 0 };
+        } settings[TGlobal::Oscillators] = { };
 
         const Json::Value oscs = root["oscs"];
         for (unsigned i = 0; i < oscs.size() && i < TGlobal::Oscillators; i++) {
@@ -223,7 +229,7 @@ bool TProgram::LoadFromFile(std::string filename)
     {
         struct {
             float pan;
-        } settings[TGlobal::Filters] = { 0 };
+        } settings[TGlobal::Filters] = { };
 
         const Json::Value filters = root["filters"];
         for (unsigned i = 0; i < filters.size() && i < TGlobal::Filters; i++) {
@@ -243,10 +249,10 @@ bool TProgram::LoadFromFile(std::string filename)
         const Json::Value envs = root["envs"];
         for (unsigned i = 0; i < envs.size(); i++) {
             const Json::Value env = envs[i];
-            Envelope[i] = { Attack: env["attack"].asFloat(),
-                    Decay: env["decay"].asFloat(),
-                    Sustain: env["sustain"].asFloat(),
-                    Release: env["release"].asFloat() };
+            Envelope[i] = { env["attack"].asFloat(),
+                    env["decay"].asFloat(),
+                    env["sustain"].asFloat(),
+                    env["release"].asFloat() };
         }
     }
 
@@ -565,7 +571,7 @@ void TProgram::NoteOn(TUnsigned7 note, TUnsigned7 velocity)
     float hz = NOTE2HZ(note);
     voice->Reset(note, hz, velocity);
 
-    TNoteData noteData({ Note: note, Velocity: velocity });
+    TNoteData noteData({ note, velocity });
 
     for (unsigned i = 0; i < TGlobal::Oscillators; i++) {
         switch (OscType[i]) {
@@ -592,12 +598,14 @@ void TProgram::NoteOn(TUnsigned7 note, TUnsigned7 velocity)
         case OSC_INPUT:
             voice->Oscillators[i].reset(new TInputOscillator(noteData));
             break;
+#ifdef HAVE_LIBGIG
         case OSC_GIG: {
             TGigOscillator *o = new TGigOscillator(noteData);
             o->SetInstrument(GigInstrument);
             voice->Oscillators[i].reset(o);
             break;
         }
+#endif
         case OSC_OFF:
         default:
             voice->Oscillators[i].reset(new TBaseOscillator(noteData));

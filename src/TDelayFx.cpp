@@ -1,6 +1,8 @@
 #include "TDelayFx.h"
 #include "TGlobal.h"
 
+static const unsigned DelayCrossFadeLength = 256;
+
 TDelayFx::TDelayFx()
 : TBaseEffect(),
   WritePos(0),
