@@ -70,31 +70,42 @@ void testSignalSawSweep(TJackSynth& synth)
     // This code depends on the default patch being a fairly
     // clean saw wave.
 
+    const unsigned chunk = 16;
+
     // Program change
     synth.HandleMidi({0xc0, 0x00});
 
+    TTimer timer("Testsignal");
+    timer.Start();
+
     synth.HandleMidi({0x90, 0, 0x40}); // note 0: 8.18 Hz
-    synth.Process(int(0.5*44100) & ~0x7);
+    for (int i = 0; i < 44100 * 0.5; i += chunk) synth.Process(chunk);
     synth.HandleMidi({0x80, 0, 0x40}); // release note
 
     // Sweep
     synth.HandleMidi({0x90, 33, 0x40}); // note 33: A 55Hz
-    synth.Process(int(0.2*44100) & ~0x7);
+    for (int i = 0; i < 44100 * 0.2; i += chunk) synth.Process(chunk);
     for (float octave = 0; octave < 6; octave += 0.0005) {
         synth.SetPitchBend(octave * 6);
-        synth.Process(16);
+        synth.Process(chunk);
     }
-    synth.Process(int(0.2*44100) & ~0x7);
+    for (int i = 0; i < 44100 * 0.2; i += chunk) synth.Process(chunk);
     synth.HandleMidi({0x80, 33, 0x40}); // release note
-    synth.Process(int(0.2*44100) & ~0x7);
+    for (int i = 0; i < 44100 * 0.2; i += chunk) synth.Process(chunk);
+
+    timer.Stop();
 }
 
 void testSignalFilterSweep(TJackSynth& synth)
 {
     const float speed = 1.001f;
+    const unsigned chunk = 32;
 
     // Program change
     synth.HandleMidi({0xc0, 0x00});
+
+    TTimer timer("Testsignal");
+    timer.Start();
 
     int value = 8000;
     synth.HandleMidi({0xf0, 0x7f, PARAM_DISTORTION, 1, hi7(value), lo7(value), 0xf7});
@@ -108,7 +119,7 @@ void testSignalFilterSweep(TJackSynth& synth)
     synth.HandleMidi({0x90, TGlobal::MidiNoteA4, 0x70});
     synth.HandleMidi({0x90, TGlobal::MidiNoteA4 - 3*12, 0x70});
 
-    synth.Process(int(0.5*44100) & ~0x7);
+    for (int i = 0; i < 44100 * 0.5; i += chunk) synth.Process(chunk);
 
     /* Low Q */
     value = 0;
@@ -118,10 +129,10 @@ void testSignalFilterSweep(TJackSynth& synth)
     for (float hz = 10; hz < 8000; hz *= speed) {
         synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
         synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
-        synth.Process(32);
+        synth.Process(chunk);
     }
 
-    synth.Process(int(0.5*44100) & ~0x7);
+    for (int i = 0; i < 44100 * 0.5; i += chunk) synth.Process(chunk);
 
     /* Medium Q */
     value = 12;
@@ -131,10 +142,10 @@ void testSignalFilterSweep(TJackSynth& synth)
     for (float hz = 10; hz < 8000; hz *= speed) {
         synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
         synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
-        synth.Process(32);
+        synth.Process(chunk);
     }
 
-    synth.Process(int(0.5*44100) & ~0x7);
+    for (int i = 0; i < 44100 * 0.5; i += chunk) synth.Process(chunk);
 
     /* High Q */
     value = 127;
@@ -144,10 +155,12 @@ void testSignalFilterSweep(TJackSynth& synth)
     for (float hz = 10; hz < 8000; hz *= speed) {
         synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(hz), lo7(hz), 0xf7});
         synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(hz), lo7(hz), 0xf7});
-        synth.Process(32);
+        synth.Process(chunk);
     }
 
-    synth.Process(int(0.5*44100) & ~0x7);
+    for (int i = 0; i < 44100 * 0.5; i += chunk) synth.Process(chunk);
+
+    timer.Stop();
 }
 
 static void speedTest()

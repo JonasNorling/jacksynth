@@ -48,6 +48,8 @@ public:
     void SetMidiSendCallback(std::function<void(const std::vector<uint8_t>&)> cb);
 
 private:
+    TTimer TimerProcess;
+
     TAudioPortCollection& InputPorts;
     TAudioPortCollection& OutputPorts;
     TAudioPortCollection& IntOutPorts;

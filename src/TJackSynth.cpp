@@ -39,7 +39,7 @@ void TChannel::NoteOff(TUnsigned7 note, TUnsigned7 velocity)
 TJackSynth::TJackSynth(TAudioPortCollection& inputPorts,
         TAudioPortCollection& outputPorts,
         TAudioPortCollection& intermediateOutPorts)
-        : InputPorts(inputPorts), OutputPorts(outputPorts),
+        : TimerProcess("Global process"), InputPorts(inputPorts), OutputPorts(outputPorts),
           IntOutPorts(intermediateOutPorts), ClockRecovery(), Channels(TGlobal::MidiChannels),
           SendMidi(0)
 {
@@ -226,6 +226,8 @@ void TJackSynth::SetMidiSendCallback(
 
 int TJackSynth::Process(jack_nframes_t nframes)
 {
+    TimerProcess.Start();
+
     TSampleBuffer in[2] = { InputPorts[0]->GetBuffer(nframes),
             InputPorts[1]->GetBuffer(nframes) };
     TSampleBuffer out[2] = { OutputPorts[0]->GetBuffer(nframes),
@@ -266,6 +268,8 @@ int TJackSynth::Process(jack_nframes_t nframes)
     IntOutPorts[1]->Commit();
     IntOutPorts[2]->Commit();
     IntOutPorts[3]->Commit();
+
+    TimerProcess.Stop();
 
     return 0;
 }
