@@ -13,6 +13,7 @@ static void fopt(const TSample* in, TSample* out, unsigned count)
 
     for (unsigned i = 0; i < count; i++) {
         out[i] = in[i] + 0.4f*d;
+        d = in[i];
     }
 }
 
@@ -58,8 +59,10 @@ void TSpeedTest::Run()
     TSampleBuffer buf1(sampledata1, COUNT);
     TSampleBuffer buf2(sampledata2, COUNT);
 
+    std::fill(&sampledata1[0], &sampledata1[COUNT], 1.0f);
+
     TButterworthLpFilter lp;
-    lp.SetCutoff(0.5);
+    lp.SetCutoff(3000);
 
     // Load cache
     lp.Process(buf1, buf2);

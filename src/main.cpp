@@ -152,6 +152,8 @@ void testSignalFilterSweep(TJackSynth& synth)
 
 static void speedTest()
 {
+    TGlobal::SampleRate = 48000;
+    TGlobal::NyquistFrequency = TGlobal::SampleRate / 2;
     TSpeedTest speedTest;
     speedTest.Run();
 }
