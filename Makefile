@@ -56,10 +56,12 @@ build/%.o: src/%.cpp src/minblep.h
 	@$(CXX) -MMD -c -o $@ $< $(CCFLAGS)
 
 spectrogramdata1.bin: $(EXE)
-	./$(EXE) --testsignal 1 > $@
+	./$(EXE) --testsignal 1
+	mv testsignal $@
 
 spectrogramdata2.bin: $(EXE)
-	./$(EXE) --testsignal 2 > $@
+	./$(EXE) --testsignal 2
+	mv testsignal $@
 
 %.wav: %.bin
 	sox -c 1 -r 44100 -t f32 $< $@

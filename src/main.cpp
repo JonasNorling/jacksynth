@@ -232,7 +232,7 @@ static void printHelp()
 {
     std::cout << "Usage: jacksynth [<args...>]" << std::endl
             << " Where allowed arguments are:" << std::endl
-            << "   -t, --testsignal <N>   Generate testsignal number N, to stdout" << std::endl
+            << "   -t, --testsignal <N>   Generate testsignal number N, to file testsignal" << std::endl
             << "   -s, --speedtest        Run the performance test benchmark" << std::endl
             << "   -C, --connect-audio    Auto-connect audio in and out ports" << std::endl
             << "   -M, --connect-midi <P> Connect MIDI input to JACK port P" << std::endl
@@ -288,7 +288,7 @@ int main(int argc, char* argv[])
         TFileAudioPort inputPortL("", TFileAudioPort::INPUT);
         TFileAudioPort inputPortR("", TFileAudioPort::INPUT);
         TAudioPortCollection inputPorts( { &inputPortL, &inputPortR });
-        TFileAudioPort outputPortL("/dev/stdout", TFileAudioPort::OUTPUT);
+        TFileAudioPort outputPortL("testsignal", TFileAudioPort::OUTPUT);
         TFileAudioPort outputPortR("/dev/null", TFileAudioPort::OUTPUT);
         TFileAudioPort intOutPort1("/dev/null", TFileAudioPort::OUTPUT);
         TFileAudioPort intOutPort2("/dev/null", TFileAudioPort::OUTPUT);
