@@ -149,7 +149,9 @@ void testSignalFilterSweep(TJackSynth& synth)
     synth.Process(int(0.5*44100) & ~0x7);
 }
 
-void runInJack(bool connectAudio, std::vector<std::string> midiConnections)
+void runInJack(bool connectAudio,
+		std::vector<std::string> midiConnections,
+		std::map<unsigned, unsigned> patchFromCmdline)
 {
     Client = jack_client_open("jacksynth", JackNullOption, 0);
     if (!Client) {
@@ -206,6 +208,12 @@ void runInJack(bool connectAudio, std::vector<std::string> midiConnections)
         jack_connect(Client, con.c_str(), me);
     }
 
+    for (auto patch : patchFromCmdline) {
+        uint8_t channel = 0xc0 | (patch.first - 1);
+        uint8_t pgm = patch.second - 1;
+        synth.HandleMidi({ channel, pgm });
+    }
+
     while (!die)
         sleep(1);
     jack_client_close(Client);
@@ -218,6 +226,7 @@ static void printHelp()
             << "   -t, --testsignal <N>   Generate testsignal number N, to stdout" << std::endl
             << "   -C, --connect-audio    Auto-connect audio in and out ports" << std::endl
             << "   -M, --connect-midi <P> Connect MIDI input to JACK port P" << std::endl
+            << "   -p, --patch <ch>:<pgm> Set program on MIDI channel (1-indexed)" << std::endl
             << "   -h, --help             Print this help text"
             << std::endl << std::endl;
 }
@@ -227,15 +236,17 @@ int main(int argc, char* argv[])
     int testsignal = 0;
     bool connectAudio = false;
     std::vector<std::string> midiConnections;
+    std::map<unsigned, unsigned> patchFromCmdline;
 
     struct option longopts[] = {
             { "testsignal", 1, 0, 't' },
             { "connect-audio", 0, 0, 'C' },
             { "connect-midi", 1, 0, 'M' },
+            { "patch", 1, 0, 'p' },
             { "help", no_argument, 0, 'h' },
             { 0, 0, 0, 0 } };
     int opt;
-    while ((opt = getopt_long(argc, argv, "t:CM:h", longopts, 0)) != -1) {
+    while ((opt = getopt_long(argc, argv, "t:CM:p:h", longopts, 0)) != -1) {
         switch (opt) {
         case 't':
             testsignal = atoi(optarg);
@@ -245,6 +256,11 @@ int main(int argc, char* argv[])
             break;
         case 'M':
             midiConnections.push_back(optarg);
+            break;
+        case 'p':
+            unsigned channel, program;
+            sscanf(optarg, "%u:%u", &channel, &program);
+            patchFromCmdline[channel] = program;
             break;
         default:
         case 'h':
@@ -283,7 +299,7 @@ int main(int argc, char* argv[])
     else {
         signal(SIGINT, sigterm);
         signal(SIGTERM, sigterm);
-        runInJack(connectAudio, midiConnections);
+        runInJack(connectAudio, midiConnections, patchFromCmdline);
     }
     return 0;
 }
