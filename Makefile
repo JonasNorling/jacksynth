@@ -55,22 +55,26 @@ build/%.o: src/%.cpp src/minblep.h
 	@mkdir -p build
 	@$(CXX) -MMD -c -o $@ $< $(CCFLAGS)
 
-spectrogramdata1.bin: $(EXE)
+testsignal1.bin: $(EXE)
 	./$(EXE) --testsignal 1
 	mv testsignal $@
 
-spectrogramdata2.bin: $(EXE)
+testsignal2.bin: $(EXE)
 	./$(EXE) --testsignal 2
+	mv testsignal $@
+
+testsignal3.bin: $(EXE)
+	./$(EXE) --testsignal 3
 	mv testsignal $@
 
 %.wav: %.bin
 	sox -c 1 -r 44100 -t f32 $< $@
 
-testspec1: spectrogram.m $(EXE) spectrogramdata1.bin spectrogramdata1.wav
-	octave --persist --eval "filename='spectrogramdata1.bin'" spectrogram.m
+testspec1: spectrogram.m $(EXE) testsignal1.bin testsignal1.wav
+	octave --persist --eval "filename='testsignal1.bin'" spectrogram.m
 
-testspec2: spectrogram.m $(EXE) spectrogramdata2.bin spectrogramdata2.wav
-	octave --persist --eval "filename='spectrogramdata2.bin'" spectrogram.m
+testspec2: spectrogram.m $(EXE) testsignal2.bin testsignal2.wav
+	octave --persist --eval "filename='testsignal2.bin'" spectrogram.m
 
 testspeed: $(EXE)
 	/usr/bin/time ./$(EXE) --testsignal 2 > /dev/null

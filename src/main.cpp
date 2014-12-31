@@ -163,6 +163,57 @@ void testSignalFilterSweep(TJackSynth& synth)
     timer.Stop();
 }
 
+void testSignalDelay(TJackSynth& synth)
+{
+    const unsigned chunk = 16;
+
+    // Program change
+    synth.HandleMidi({0xc0, 0x01});
+
+    // Open up the filter
+    unsigned value = 8000;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 0, hi7(value), lo7(value), 0xf7});
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FILTER_CUTOFF_HZ, 1, hi7(value), lo7(value), 0xf7});
+
+    // Set delay parameters
+    value = 500;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FX_DELAY, 0, hi7(value), lo7(value), 0xf7});
+    value = 100;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FX_FEEDBACK, 0, hi7(value), lo7(value), 0xf7});
+    value = 64;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FX_MIX, 0, hi7(value), lo7(value), 0xf7});
+
+    // Set release time
+    value = 10;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_ENVELOPE, 0x03, hi7(value), lo7(value), 0xf7});
+    synth.HandleMidi({0xf0, 0x7f, PARAM_ENVELOPE, 0x13, hi7(value), lo7(value), 0xf7});
+
+    TTimer timer("Testsignal");
+    timer.Start();
+
+    synth.HandleMidi({0x90, TGlobal::MidiNoteA4, 0x40});
+    synth.HandleMidi({0x90, TGlobal::MidiNoteA4 + 6, 0x40});
+    for (int i = 0; i < 44100 * 0.05; i += chunk) synth.Process(chunk);
+    synth.HandleMidi({0x80, TGlobal::MidiNoteA4, 0x40});
+    synth.HandleMidi({0x80, TGlobal::MidiNoteA4 + 6, 0x40});
+
+    for (int i = 0; i < 44100 * 1; i += chunk) synth.Process(chunk);
+
+    // Set delay in ms
+    value = 312;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FX_DELAY, 0, hi7(value), lo7(value), 0xf7});
+
+    for (int i = 0; i < 44100 * 2; i += chunk) synth.Process(chunk);
+
+    // Set delay in ms
+    value = 206;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FX_DELAY, 0, hi7(value), lo7(value), 0xf7});
+
+    for (int i = 0; i < 44100 * 2; i += chunk) synth.Process(chunk);
+
+    timer.Stop();
+}
+
 static void speedTest()
 {
     TGlobal::SampleRate = 48000;
@@ -321,6 +372,9 @@ int main(int argc, char* argv[])
             break;
         case 2:
             testSignalFilterSweep(synth);
+            break;
+        case 3:
+            testSignalDelay(synth);
             break;
         }
     }
