@@ -50,13 +50,14 @@ TProgram::TProgram(int patch)
   QuarterNoteTime(500, 1),
   Modulations()
 {
-    switch (Patch % 6) {
+    switch (Patch % 7) {
     case 0: LoadFromFile("patches/0.json"); break;
     case 1: LoadFromFile("patches/1.json"); break;
     case 2: LoadFromFile("patches/2.json"); break;
     case 3: LoadFromFile("patches/microQ.json"); break;
     case 4: LoadFromFile("patches/gig.json"); break;
     case 5: LoadFromFile("patches/gfx.json"); break;
+    case 6: LoadFromFile("patches/wt.json"); break;
     }
 }
 

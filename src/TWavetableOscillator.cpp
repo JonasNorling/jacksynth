@@ -1,52 +1,76 @@
 #include "TWavetableOscillator.h"
+#include "util.h"
 
-std::vector<TSample> generateSine()
+TWavetable::TWavetable()
 {
-    const int len = TWavetableOscillator::Wavelength;
-    std::vector<TSample> wave(len);
-    for (int i = 0; i < len; i++) {
-        wave[i] = sin(double(i) / len * 2 * M_PI) * TGlobal::OscAmplitude;
-    }
-    return wave;
 }
 
-/**
- * This squarewave table doesn't have enough harmonics to actually
- * behave like a square wave, but it clearly illustrates the severe
- * aliasing that is caused by these harmonics when higher notes are
- * played.
- */
-std::vector<TSample> generateSquare()
+TWavetable generateSquareTable(unsigned wavelength)
 {
-    const int len = TWavetableOscillator::Wavelength;
-    std::vector<TSample> wave(len);
-    for (int i = 0; i < len; i++) {
-        wave[i] = (sin(double(i) / len * 2 * M_PI) * 1.0 / 1
-                + sin(double(3 * i) / len * 2 * M_PI) * 1.0 / 3
-                + sin(double(5 * i) / len * 2 * M_PI) * 1.0 / 5
-                + sin(double(7 * i) / len * 2 * M_PI) * 1.0 / 7
-                + sin(double(9 * i) / len * 2 * M_PI) * 1.0 / 9
-                + sin(double(11 * i) / len * 2 * M_PI) * 1.0 / 11
-                + sin(double(13 * i) / len * 2 * M_PI) * 1.0 / 13
-                + sin(double(15 * i) / len * 2 * M_PI) * 1.0 / 15
-                + sin(double(17 * i) / len * 2 * M_PI) * 1.0 / 17
-                + sin(double(19 * i) / len * 2 * M_PI) * 1.0 / 19
-                + sin(double(21 * i) / len * 2 * M_PI) * 1.0 / 21
-                + sin(double(23 * i) / len * 2 * M_PI) * 1.0 / 23
-                + sin(double(25 * i) / len * 2 * M_PI) * 1.0 / 25
-                + sin(double(27 * i) / len * 2 * M_PI) * 1.0 / 27
-                + sin(double(29 * i) / len * 2 * M_PI) * 1.0 / 29
-                + sin(double(31 * i) / len * 2 * M_PI) * 1.0 / 31
-                + sin(double(33 * i) / len * 2 * M_PI) * 1.0 / 33
-                + sin(double(35 * i) / len * 2 * M_PI) * 1.0 / 35) * TGlobal::OscAmplitude;
+    TTimer timer("Generate square table");
+    timer.Start();
+
+    TWavetable table;
+    table.BaseNote = 12;
+    table.Tables = 10;
+    table.NotesPerTable = 12;
+    table.Length = wavelength;
+
+    table.Data = new TSample[table.Tables * table.Length];
+
+    unsigned nyquist = 44100 / 2;
+
+    for (int t = 0; t < table.Tables; t++) {
+        const unsigned f = NOTE2HZ(table.BaseNote + t * table.NotesPerTable);
+        unsigned harmonics = double(nyquist) / f;
+        harmonics = (harmonics / 2) * 2 - 1; // Odd number
+
+        printf("Table %d: from %u Hz, %u harmonics\n", t, f, harmonics);
+
+        for (int i = 0; i < table.Length; i++) {
+            double phase = 2.0 * M_PI * double(i) / table.Length;
+            double v = 0.0;
+
+            for (int h = harmonics; h > 0; h -= 2) {
+                v += sin(phase * h) * 1.0 / h;
+            }
+
+            table.GetTable(t)[i] = v * TGlobal::OscAmplitude;
+        }
     }
-    return wave;
+
+    timer.Stop();
+    return table;
 }
 
-const std::vector<TSample> TWavetableOscillator::SineTable(generateSine());
-const std::vector<TSample> TWavetableOscillator::SquareTable(generateSquare());
+TWavetable generateSineTable(unsigned wavelength)
+{
+    TTimer timer("Generate sine table");
+    timer.Start();
+
+    TWavetable table;
+    table.BaseNote = 1;
+    table.Tables = 1;
+    table.NotesPerTable = 12;
+    table.Length = wavelength;
+
+    table.Data = new TSample[table.Tables * table.Length];
+
+    for (int i = 0; i < wavelength; i++) {
+        double phase = 2.0 * M_PI * double(i) / wavelength;
+        table.GetTable(0)[i] = sin(phase) * TGlobal::OscAmplitude;
+    }
+
+    timer.Stop();
+    return table;
+}
+
+const TWavetable TWavetableOscillator::Table(generateSquareTable(Wavelength));
 
 TWavetableOscillator::TWavetableOscillator(const TNoteData& noteData)
-        : TBaseOscillator(noteData), Wave(SineTable.data())
+        : TBaseOscillator(noteData)
 {
+    int n = (noteData.Note - Table.BaseNote) / Table.NotesPerTable;
+    n = clamp(n, 0, (int)Table.Tables - 1);
+    Subtable = Table.GetTable(n);
 }

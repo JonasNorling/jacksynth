@@ -7,13 +7,34 @@
 #include "TBaseOscillator.h"
 #include "TGlobal.h"
 
+class TWavetable
+{
+public:
+    TWavetable();
+
+    const TSample* GetTable(unsigned table) const {
+        return &Data[Length * table];
+    }
+
+    TSample* GetTable(unsigned table) {
+        return &Data[Length * table];
+    }
+
+    size_t Length;
+    unsigned BaseNote; // Note number for the first wavetable
+    unsigned NotesPerTable;
+    size_t Tables;
+
+    TSample* Data;
+};
+
 class TWavetableOscillator: public TBaseOscillator
 {
 UNCOPYABLE(TWavetableOscillator)
     ;
 
 public:
-    static const int Wavelength = 256 * 4;
+    static const int Wavelength = 2048;
 
     TWavetableOscillator(const TNoteData& noteData);
 
@@ -21,16 +42,14 @@ public:
             TSampleBuffer& syncout)
     {
         for (TSample& outs : out) {
-            outs = linterpolate(Wave, Wavelength, PhaseAccumulator);
-            PhaseAccumulator += (Hz * Wavelength) / TGlobal::SampleRate;
-            if (PhaseAccumulator >= Wavelength) PhaseAccumulator -= Wavelength;
+            outs = linterpolate(Subtable, Table.Length, PhaseAccumulator);
+            PhaseAccumulator += (Hz * Table.Length) / TGlobal::SampleRate;
+            if (PhaseAccumulator >= Table.Length) PhaseAccumulator -= Table.Length;
         }
         syncout.Clear();
     }
 
 private:
-    const TSample* Wave;
-
-    static const std::vector<TSample> SineTable;
-    static const std::vector<TSample> SquareTable;
+    static const TWavetable Table;
+    const TSample* Subtable;
 };
