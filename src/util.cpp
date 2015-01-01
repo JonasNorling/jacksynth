@@ -16,6 +16,12 @@ void TTimer::Log() const
     float max = MaxNs / 1000000.0;
     float average = Nanoseconds / (Count > 0 ? Count : 1) / 1000000.0;
 
-    printf("[Timer] %s: %d invocations, total %u ms, average %.3f ms, max %.3f ms\n",
-            Name.c_str(), Count, GetMs(), average, max);
+    printf("[Timer] %s: %d invocations, total %.3f ms, average %.3f ms, max %.3f ms\n",
+            Name.c_str(), Count, Nanoseconds / 1000000.0, average, max);
+}
+
+void TTimer::ReportOpsPerSecond(unsigned ops) const
+{
+    double mflops = double(1000LLU * ops * Count) / double(Nanoseconds);
+    printf("[Timer] %s: %.3f MFLOPS\n", Name.c_str(), mflops);
 }

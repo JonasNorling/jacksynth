@@ -26,7 +26,15 @@ public:
     {
         return Begin;
     }
+    const TSample* begin() const
+    {
+        return Begin;
+    }
     TSample* end()
+    {
+        return End;
+    }
+    const TSample* end() const
     {
         return End;
     }
@@ -36,6 +44,10 @@ public:
         return Count;
     }
     TSample& operator[](size_t n)
+    {
+        return Begin[n];
+    }
+    const TSample& operator[](size_t n) const
     {
         return Begin[n];
     }

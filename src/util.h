@@ -127,6 +127,7 @@ public:
     }
 
     void Log() const;
+    void ReportOpsPerSecond(unsigned ops) const;
 
 private:
     std::string Name;

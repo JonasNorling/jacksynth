@@ -7,17 +7,45 @@ TSpeedTest::TSpeedTest()
 {
 }
 
-static void fopt(const TSample* in, TSample* out, unsigned count)
+static void __attribute__((noinline)) fopt(const TSample* in, TSample* out, unsigned count)
+{
+    float d = 1.1f;
+    float a = in[0];
+
+    // This loop is fairly slow, probably because of the data dependence on
+    // the last iteration.
+
+    for (unsigned i = 0; i < count; i++) {
+        d *= a;
+    }
+
+    out[0] = d;
+}
+
+static void __attribute__((noinline)) foptOnData(const TSample* in, TSample* out, unsigned count)
 {
     static float d = 0.0f;
 
     for (unsigned i = 0; i < count; i++) {
-        out[i] = in[i] + 0.4f*d;
+        out[i] = in[i] * d;
         d = in[i];
     }
 }
 
-static void butterworth(const TSample* __restrict__ in,
+static void __attribute__((noinline)) foptRestrict(
+        const TSample* __restrict__ in,
+        TSample* __restrict__ out,
+        unsigned count)
+{
+    static float d = 0.0f;
+
+    for (unsigned i = 0; i < count; i++) {
+        out[i] = in[i] * d;
+        d = in[i];
+    }
+}
+
+static void __attribute__((noinline)) butterworth(const TSample* __restrict__ in,
         TSample* __restrict__ out, unsigned count)
 {
     static const int N = 4;
@@ -48,6 +76,41 @@ static void butterworth(const TSample* __restrict__ in,
     }
 }
 
+static void __attribute__((noinline)) butterworthOnBuffer(const TSampleBuffer& in,
+        TSampleBuffer& out)
+{
+    const size_t count = in.GetCount();
+    const TSample* __restrict__ ins = in.begin();
+    TSample* __restrict__ outs = out.begin();
+
+    static const int N = 4;
+
+    struct TCoeffs
+    {
+        TSample C[N + 1];
+        TSample D[N + 1];
+        TSample Gain;
+    } Coeffs;
+
+    Coeffs = { { 1,2,3,4,5 }, { 1,2,3,4,5 }, 0.1 };
+
+    static TSample X[N + 1];
+    static TSample Y[N + 1];
+
+    for (unsigned i = 0; i < count; i++) {
+        for (int n=N; n>0; n--) {
+            X[n] = X[n-1];
+            Y[n] = Y[n-1];
+        }
+        X[0] = ins[i] * Coeffs.Gain;
+        Y[0] = 0;
+        for (int n=0; n<=N; n++) {
+            Y[0] += Coeffs.C[n]*X[n] - Coeffs.D[n]*Y[n];
+        }
+        outs[i] = Y[0];
+    }
+}
+
 void TSpeedTest::Run()
 {
     const unsigned COUNT = 1000000;
@@ -69,11 +132,25 @@ void TSpeedTest::Run()
     lp.Process(buf1, buf2);
     lp.Process(buf1, buf2);
 
-    TTimer timerFopt1("fopt");
+    TTimer timerFopt("fopt");
     for (unsigned run = 0; run < RUNS; run++) {
-        timerFopt1.Start();
+        timerFopt.Start();
         fopt(sampledata1, sampledata2, COUNT);
-        timerFopt1.Stop();
+        timerFopt.Stop();
+    }
+
+    TTimer timerFoptOnData("foptOnData");
+    for (unsigned run = 0; run < RUNS; run++) {
+        timerFoptOnData.Start();
+        foptOnData(sampledata1, sampledata2, COUNT);
+        timerFoptOnData.Stop();
+    }
+
+    TTimer timerFoptRestrict("foptRestrict");
+    for (unsigned run = 0; run < RUNS; run++) {
+        timerFoptRestrict.Start();
+        foptRestrict(sampledata1, sampledata2, COUNT);
+        timerFoptRestrict.Stop();
     }
 
     TTimer timerBig("butterworth unsliced");
@@ -100,4 +177,21 @@ void TSpeedTest::Run()
         butterworth(sampledata1, sampledata2, COUNT);
         timerLocal.Stop();
     }
+
+    TTimer timerLocalBuffer("butterworth local buffer");
+    for (unsigned run = 0; run < RUNS; run++) {
+        timerLocalBuffer.Start();
+        butterworthOnBuffer(buf1, buf2);
+        timerLocalBuffer.Stop();
+    }
+
+    printf("\n");
+    timerFopt.ReportOpsPerSecond(COUNT);
+    timerFoptOnData.ReportOpsPerSecond(COUNT);
+    timerFoptRestrict.ReportOpsPerSecond(COUNT);
+    timerBig.ReportOpsPerSecond(COUNT);
+    timerSmall.ReportOpsPerSecond(COUNT);
+    timerLocal.ReportOpsPerSecond(COUNT);
+    timerLocalBuffer.ReportOpsPerSecond(COUNT);
+    printf("\n");
 }
