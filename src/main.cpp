@@ -3,6 +3,8 @@
 #include <iostream>
 #include <signal.h>
 #include <queue>
+
+#include "TAudioFileWriter.h"
 #include "TJackSynth.h"
 #include "TFileAudioPort.h"
 #include "TGlobal.h"
@@ -349,21 +351,22 @@ int main(int argc, char* argv[])
     }
 
     if (testsignal) {
+        TGlobal::SampleRate = 44100;
+        TGlobal::NyquistFrequency = TGlobal::SampleRate / 2;
+
+        TAudioFileWriter fileWriter("testsignal.wav", 2, TGlobal::SampleRate);
+
         TFileAudioPort inputPortL("", TFileAudioPort::INPUT);
         TFileAudioPort inputPortR("", TFileAudioPort::INPUT);
         TAudioPortCollection inputPorts( { &inputPortL, &inputPortR });
-        TFileAudioPort outputPortL("testsignal", TFileAudioPort::OUTPUT);
-        TFileAudioPort outputPortR("/dev/null", TFileAudioPort::OUTPUT);
         TFileAudioPort intOutPort1("/dev/null", TFileAudioPort::OUTPUT);
         TFileAudioPort intOutPort2("/dev/null", TFileAudioPort::OUTPUT);
         TFileAudioPort intOutPort3("/dev/null", TFileAudioPort::OUTPUT);
         TFileAudioPort intOutPort4("/dev/null", TFileAudioPort::OUTPUT);
         TAudioPortCollection intOutPorts( { &intOutPort1, &intOutPort2,
                 &intOutPort3, &intOutPort4 });
-        TAudioPortCollection outputPorts( { &outputPortL, &outputPortR });
+        TAudioPortCollection outputPorts = fileWriter.GetPorts();
 
-        TGlobal::SampleRate = 44100;
-        TGlobal::NyquistFrequency = TGlobal::SampleRate / 2;
         TJackSynth synth(inputPorts, outputPorts, intOutPorts);
 
         switch (testsignal) {

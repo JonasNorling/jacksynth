@@ -12,6 +12,7 @@ LDFLAGS := -lm $(shell pkg-config --libs $(PKGS))
 EXE = jacksynth
 all: $(EXE)
 
+SRCS += src/TAudioFileWriter.cpp
 SRCS += src/TButterworthLpFilter.cpp
 SRCS += src/TClockRecovery.cpp
 SRCS += src/TDelayFx.cpp
@@ -55,20 +56,27 @@ build/%.o: src/%.cpp src/minblep.h
 	@mkdir -p build
 	@$(CXX) -MMD -c -o $@ $< $(CCFLAGS)
 
-testsignal1.bin: $(EXE)
+testsignal1.wav: $(EXE)
 	./$(EXE) --testsignal 1
-	mv testsignal $@
+	mv testsignal.wav $@
 
-testsignal2.bin: $(EXE)
+testsignal2.wav: $(EXE)
 	./$(EXE) --testsignal 2
-	mv testsignal $@
+	mv testsignal.wav $@
 
-testsignal3.bin: $(EXE)
+testsignal3.wav: $(EXE)
 	./$(EXE) --testsignal 3
-	mv testsignal $@
+	mv testsignal.wav $@
+
+testsignal4.wav: $(EXE)
+	./$(EXE) --testsignal 4
+	mv testsignal.wav $@
 
 %.wav: %.bin
 	sox -c 1 -r 44100 -t f32 $< $@
+
+%.bin: %.wav
+	sox $< -t f32 -c 1 $@
 
 testspec1: spectrogram.m $(EXE) testsignal1.bin testsignal1.wav
 	octave --persist --eval "filename='testsignal1.bin'" spectrogram.m
