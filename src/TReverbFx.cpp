@@ -40,9 +40,10 @@ void TReverbFx::Process(TSampleBufferCollection& in, TSampleBufferCollection& ou
 
         unsigned d = 137;
         while (d < maxDelay) {
-            TSample factor = ((d * 4711) % 1337) * (1.0f - (float(d) / maxDelay));
-            Buffer[0][(ReadPos + d) % BufferSize] += vl * factor / 6000.0f;
-            Buffer[1][(ReadPos + d) % BufferSize] += vr * factor / 6000.0f;
+            TSample fl = ((d * 4711) % 1337) * (1.0f - (float(d) / maxDelay));
+            TSample fr = ((d * 6347) % 1337) * (1.0f - (float(d) / maxDelay));
+            Buffer[0][(ReadPos + d) % BufferSize] += vl * fl / 6000.0f;
+            Buffer[1][(ReadPos + d) % BufferSize] += vr * fr / 6000.0f;
             d += ((d * 5684) % 397);
         }
 
