@@ -216,6 +216,49 @@ void testSignalDelay(TJackSynth& synth)
     timer.Stop();
 }
 
+void testSignalReverb(TJackSynth& synth)
+{
+    const unsigned chunk = 16;
+
+    // Program change
+    synth.HandleMidi({0xc0, 0x00});
+
+    unsigned value = 1; // Reverb
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FX_TYPE, 0, hi7(value), lo7(value), 0xf7});
+    TTimer timer("Testsignal");
+    timer.Start();
+
+    auto signal = [&synth]() {
+        synth.HandleMidi({0x90, 120, 0x70});
+        for (float octave = 0; octave < 6; octave += 0.03) {
+            synth.SetPitchBend(octave * -6);
+            synth.Process(chunk);
+        }
+        synth.HandleMidi({0x80, 120, 0x40}); // release note
+        for (int i = 0; i < 44100 * 1.0; i += chunk) synth.Process(chunk);
+    };
+
+    value = 0;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FX_MIX, 0, hi7(value), lo7(value), 0xf7});
+    signal();
+
+    value = 32;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FX_MIX, 0, hi7(value), lo7(value), 0xf7});
+    signal();
+
+    value = 64;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FX_MIX, 0, hi7(value), lo7(value), 0xf7});
+    signal();
+
+    value = 127;
+    synth.HandleMidi({0xf0, 0x7f, PARAM_FX_MIX, 0, hi7(value), lo7(value), 0xf7});
+    signal();
+
+    for (int i = 0; i < 44100 * 1; i += chunk) synth.Process(chunk);
+
+    timer.Stop();
+}
+
 static void speedTest()
 {
     TGlobal::SampleRate = 48000;
@@ -378,6 +421,9 @@ int main(int argc, char* argv[])
             break;
         case 3:
             testSignalDelay(synth);
+            break;
+        case 4:
+            testSignalReverb(synth);
             break;
         }
     }

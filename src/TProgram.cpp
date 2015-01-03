@@ -904,6 +904,14 @@ void TProgram::SetParameter(int unit, TParameter param, int value, bool echo)
             }
         }
     }
+    else if (param == PARAM_FX_TYPE) {
+        if (value == 0) { // Delay
+            Effects[unit].reset(new TDelayFx());
+        }
+        else if (value == 1) { // Reverb
+            Effects[unit].reset(new TReverbFx);
+        }
+    }
     else if ((param & 0xe0) == 0x20) {
         int n = 0;
         for (TModulation& m : Modulations) {

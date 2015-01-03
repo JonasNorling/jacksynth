@@ -74,6 +74,7 @@ enum TParameter
     PARAM_FX_FEEDBACK = 0x0c,
     PARAM_FX_DELAY = 0x0d,
     PARAM_FX_INSERT_GAIN = 0x0e,
+    PARAM_FX_TYPE = 0x0f,
     PARAM_MODULATION0 = 0x20
 };
 
