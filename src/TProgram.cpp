@@ -511,7 +511,7 @@ inline float TProgram::ModulationValue(TModulation::TDestination d, const TVoice
         if (m.Destination == d) {
             switch (m.Source) {
             case TModulation::CONSTANT: mod += m.Amount; break;
-            case TModulation::KEY: mod += m.Amount * semitones(voice.Note - TGlobal::MidiNoteE3); break;
+            case TModulation::KEY: mod += m.Amount * semitones((int)voice.Note - (int)TGlobal::MidiNoteE3); break;
             case TModulation::PITCHBEND: mod += m.Amount * PitchBend; break;
             case TModulation::LFO1: mod += m.Amount * voice.Lfos[0].GetValue(); break;
             case TModulation::LFO2: mod += m.Amount * voice.Lfos[1].GetValue(); break;
