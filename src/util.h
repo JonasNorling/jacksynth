@@ -161,19 +161,20 @@ T clamp(T v, T min, T max)
 }
 
 template<typename T>
-T linterpolate(const T& s0, const T& s1, double pos)
+T linterpolate(const T& s0, const T& s1, float pos)
 {
-    double frac = pos - int(pos);
+    float frac = pos - int(pos);
     return s0 * (1 - frac) + s1 * frac;
 }
 
 template<typename T>
 T linterpolate(const T* table, int tablelen, double pos)
 {
-    const T& s0 = table[int(pos) % tablelen];
-    const T& s1 = table[(int(pos) + 1) % tablelen];
-    double frac = pos - int(pos);
-    return s0 * (1 - frac) + s1 * frac;
+    const unsigned intpos = unsigned(pos);
+    const T s0 = table[intpos % tablelen];
+    const T s1 = table[(intpos + 1) % tablelen];
+    const float frac = pos - intpos;
+    return s0 * (1.0f - frac) + s1 * frac;
 }
 
 template<typename T>
