@@ -11,28 +11,31 @@ TWavetable generateSquareTable(unsigned wavelength)
     timer.Start();
 
     TWavetable table;
-    table.BaseNote = 12;
-    table.Tables = 10;
-    table.NotesPerTable = 12;
+    table.BaseNote = 8;
+    table.Tables = 37;
+    table.NotesPerTable = 3;
     table.Length = wavelength;
 
     table.Data = new TSample[table.Tables * table.Length];
 
     unsigned nyquist = 44100 / 2;
 
-    for (int t = 0; t < table.Tables; t++) {
-        const unsigned f = NOTE2HZ(table.BaseNote + t * table.NotesPerTable);
-        unsigned harmonics = double(nyquist) / f;
-        harmonics = (harmonics / 2) * 2 - 1; // Odd number
+    for (unsigned t = 0; t < table.Tables; t++) {
+        const unsigned f = NOTE2HZ(table.BaseNote + (t + 1) * table.NotesPerTable);
 
-        printf("Table %d: from %u Hz, %u harmonics\n", t, f, harmonics);
+        unsigned harmonics = 1;
+        while (f * (harmonics + 2) < nyquist) {
+            harmonics += 2;
+        }
 
-        for (int i = 0; i < table.Length; i++) {
+        //printf("Table %d: up to %u Hz, %u harmonics\n", t, f, harmonics);
+
+        for (unsigned i = 0; i < table.Length; i++) {
             double phase = 2.0 * M_PI * double(i) / table.Length;
             double v = 0.0;
 
             for (int h = harmonics; h > 0; h -= 2) {
-                v += sin(phase * h) * 1.0 / h;
+                v += sinf(phase * h) * 1.0 / h;
             }
 
             table.GetTable(t)[i] = v * TGlobal::OscAmplitude;
@@ -56,7 +59,7 @@ TWavetable generateSineTable(unsigned wavelength)
 
     table.Data = new TSample[table.Tables * table.Length];
 
-    for (int i = 0; i < wavelength; i++) {
+    for (unsigned i = 0; i < wavelength; i++) {
         double phase = 2.0 * M_PI * double(i) / wavelength;
         table.GetTable(0)[i] = sin(phase) * TGlobal::OscAmplitude;
     }

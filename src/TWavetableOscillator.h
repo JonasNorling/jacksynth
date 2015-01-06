@@ -21,7 +21,7 @@ public:
     }
 
     size_t Length;
-    unsigned BaseNote; // Note number for the first wavetable
+    unsigned BaseNote; // Highest note number for the first wavetable
     unsigned NotesPerTable;
     size_t Tables;
 
