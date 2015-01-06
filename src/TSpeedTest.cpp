@@ -1,6 +1,9 @@
 #include "TSpeedTest.h"
 #include "IAudioPort.h"
 #include "TButterworthLpFilter.h"
+#include "TMinBlepPulseOscillator.h"
+#include "TMinBlepSawOscillator.h"
+#include "TWavetableOscillator.h"
 #include "util.h"
 
 TSpeedTest::TSpeedTest()
@@ -119,17 +122,22 @@ void TSpeedTest::Run()
 
     TSample* sampledata1 = new TSample[COUNT];
     TSample* sampledata2 = new TSample[COUNT];
+    TSample* sampledata3 = new TSample[COUNT];
+    TSample* sampledata4 = new TSample[COUNT];
     TSampleBuffer buf1(sampledata1, COUNT);
     TSampleBuffer buf2(sampledata2, COUNT);
+    TSampleBuffer buf3(sampledata2, COUNT);
+    TSampleBuffer buf4(sampledata2, COUNT);
 
     std::fill(&sampledata1[0], &sampledata1[COUNT], 1.0f);
+    std::fill(&sampledata2[0], &sampledata2[COUNT], 1.0f);
+    std::fill(&sampledata3[0], &sampledata3[COUNT], 1.0f);
+    std::fill(&sampledata4[0], &sampledata4[COUNT], 1.0f);
 
     TButterworthLpFilter lp;
     lp.SetCutoff(3000);
 
     // Load cache
-    lp.Process(buf1, buf2);
-    lp.Process(buf1, buf2);
     lp.Process(buf1, buf2);
 
     TTimer timerFopt("fopt");
@@ -185,6 +193,33 @@ void TSpeedTest::Run()
         timerLocalBuffer.Stop();
     }
 
+    TTimer timerOsc1("minBLEP saw");
+    TMinBlepSawOscillator minBlepSaw({TGlobal::MidiNoteE3, 64});
+    minBlepSaw.SetFrequency(NOTE2HZ(TGlobal::MidiNoteE3));
+    for (unsigned run = 0; run < RUNS; run++) {
+        timerOsc1.Start();
+        minBlepSaw.Process(buf1, buf2, buf3, buf4);
+        timerOsc1.Stop();
+    }
+
+    TTimer timerOsc2("minBLEP pulse");
+    TMinBlepPulseOscillator minBlepPulse({TGlobal::MidiNoteE3, 64});
+    minBlepPulse.SetFrequency(NOTE2HZ(TGlobal::MidiNoteE3));
+    for (unsigned run = 0; run < RUNS; run++) {
+        timerOsc2.Start();
+        minBlepPulse.Process(buf1, buf2, buf3, buf4);
+        timerOsc2.Stop();
+    }
+
+    TTimer timerOsc3("wavetable");
+    TWavetableOscillator wavetable({TGlobal::MidiNoteE3, 64});
+    wavetable.SetFrequency(NOTE2HZ(TGlobal::MidiNoteE3));
+    for (unsigned run = 0; run < RUNS; run++) {
+        timerOsc3.Start();
+        wavetable.Process(buf1, buf2, buf3, buf4);
+        timerOsc3.Stop();
+    }
+
     printf("\n");
     timerFopt.ReportOpsPerSecond(COUNT);
     timerFoptOnData.ReportOpsPerSecond(COUNT);
@@ -193,5 +228,8 @@ void TSpeedTest::Run()
     timerSmall.ReportOpsPerSecond(COUNT);
     timerLocal.ReportOpsPerSecond(COUNT);
     timerLocalBuffer.ReportOpsPerSecond(COUNT);
+    timerOsc1.ReportOpsPerSecond(COUNT);
+    timerOsc2.ReportOpsPerSecond(COUNT);
+    timerOsc3.ReportOpsPerSecond(COUNT);
     printf("\n");
 }
