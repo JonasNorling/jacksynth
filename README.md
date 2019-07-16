@@ -7,6 +7,7 @@ This is an experiment with building a sound synthesizer on JACK. Several oscilla
 Building
 ========
 
+sudo apt install --no-install-recommends libsndfile1-dev libjsoncpp-dev libgig-dev jackd1 libjack-dev
 make
 
 

@@ -1,8 +1,9 @@
 HAVE_LIBGIG := $(shell pkg-config --exists gig && echo y)
 PKGS := jack sndfile jsoncpp $(if $(HAVE_LIBGIG),gig)
 
-CCFLAGS := -g -Wall -O3 -std=c++0x $(shell pkg-config --cflags $(PKGS))
+CCFLAGS := -g -Wall -O3 -std=c++11 $(shell pkg-config --cflags $(PKGS))
 CCFLAGS += $(if $(HAVE_LIBGIG),-DHAVE_LIBGIG=1)
+CCFLAGS += -Wno-deprecated-register
 #CCFLAGS += -msse2 -fopt-info-vec-optimized
 #CCFLAGS += -Weffc++
 #CCFLAGS += -fno-exceptions -fno-rtti

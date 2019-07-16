@@ -10,7 +10,7 @@ TFileAudioPort::TFileAudioPort(std::string filename, TDirection direction)
 {
     if (direction == OUTPUT) {
         Fd = fopen(filename.c_str(), "w");
-        assert(Fd >= 0);
+        assert(Fd);
     }
 }
 

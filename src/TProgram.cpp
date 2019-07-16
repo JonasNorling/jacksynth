@@ -409,7 +409,6 @@ bool TProgram::Process(TSampleBufferCollection& in, TSampleBufferCollection& out
         // Buffers for communicating samples with the rest of the system
         TSampleBuffer bufIn[2] = { in[0]->Slice(sampleno, sampleno + subframelen),
                 in[1]->Slice(sampleno, sampleno + subframelen)};
-        TSampleBuffer inr(in[1]->Slice(sampleno, sampleno + subframelen));
         TSampleBuffer into1(into[0]->Slice(sampleno, sampleno + subframelen));
         TSampleBuffer into2(into[1]->Slice(sampleno, sampleno + subframelen));
         TSampleBuffer into3(into[2]->Slice(sampleno, sampleno + subframelen));

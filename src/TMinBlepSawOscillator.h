@@ -18,5 +18,4 @@ private:
     static const int BufferLen = minblep::length;
     TSample Buffer[BufferLen];
     int BufferPos;
-    TSample Target;
 };

@@ -3,7 +3,7 @@
 #include <cassert>
 
 TSvfFilter::TSvfFilter()
-: Coeffs {f: 0.1f, q: 0.0f}, State1 {0, 0}, State2 {0, 0}, Mix {1.0f, 0.0f, 0.0f}, WaveShaper(1.0f)
+: Coeffs {.f = 0.1f, .q = 0.0f}, State1 {0, 0}, State2 {0, 0}, Mix {1.0f, 0.0f, 0.0f}, WaveShaper(1.0f)
 {
     // Can't set cutoff, because sample rate may be unknown
     SetResonance(0.0f);
